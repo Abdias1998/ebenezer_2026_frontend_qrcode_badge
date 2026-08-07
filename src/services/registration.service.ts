@@ -6,25 +6,13 @@ export const registrationService = {
     data: RegistrationFormData,
     eventId: string,
   ): Promise<RegistrationResponse> {
-    const formData = new FormData();
-
-    // Flatten form data
-    Object.entries(data).forEach(([key, value]) => {
-      if (key === "photo" && value instanceof File) {
-        formData.append("photo", value);
-      } else if (key === "participationDays" && Array.isArray(value)) {
-        value.forEach((day) => formData.append("participationDays[]", day));
-      } else if (value !== null && value !== undefined) {
-        formData.append(key, String(value));
-      }
-    });
-
-    formData.append("eventId", eventId);
+    // The photo never leaves the browser: it's only used locally to render
+    // the badge, so it's excluded from the payload sent to the backend.
+    const { photo: _photo, acceptTerms, ...rest } = data;
 
     const response = await apiClient.post<{ data: RegistrationResponse }>(
       "/registrations/public",
-      formData,
-      { headers: { "Content-Type": "multipart/form-data" } },
+      { ...rest, acceptTerms: String(acceptTerms), eventId },
     );
 
     return response.data.data;

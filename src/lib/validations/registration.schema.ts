@@ -19,15 +19,6 @@ export const personalInfoSchema = z.object({
   gender: z.enum(["male", "female"], {
     required_error: "Veuillez sélectionner votre sexe",
   }),
-  birthDate: z
-    .string()
-    .min(1, "La date de naissance est requise")
-    .refine((val) => {
-      const date = new Date(val);
-      const now = new Date();
-      const age = now.getFullYear() - date.getFullYear();
-      return age >= 5 && age <= 120;
-    }, "Date de naissance invalide"),
   phone: z
     .string()
     .min(8, "Numéro de téléphone invalide")

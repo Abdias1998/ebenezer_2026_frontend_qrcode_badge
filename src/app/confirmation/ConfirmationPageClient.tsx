@@ -11,7 +11,6 @@ import {
   MapPin,
   Hash,
   Clock,
-  Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -75,15 +74,6 @@ export function ConfirmationPageClient() {
       </div>
     );
   }
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      await navigator.share({
-        title: "Mon inscription EBENEZER",
-        text: `Je suis inscrit(e) à ${registration.event?.name} ! N° ${registration.registrationNumber}`,
-      });
-    }
-  };
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -210,7 +200,7 @@ export function ConfirmationPageClient() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-3 print:hidden"
+          className="grid grid-cols-1 sm:grid-cols-2 gap-3 print:hidden"
         >
           {registration.badgePdf && (
             <Button
@@ -227,15 +217,6 @@ export function ConfirmationPageClient() {
               Mon badge PDF
             </Button>
           )}
-
-          <Button
-            variant="outline"
-            className="gap-2 w-full"
-            onClick={handleShare}
-          >
-            <Share2 className="w-4 h-4" />
-            Partager
-          </Button>
 
           <Button
             variant="royal"

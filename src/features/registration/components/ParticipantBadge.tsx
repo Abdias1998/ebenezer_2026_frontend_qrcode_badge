@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, ImageDown, Printer, X, ZoomIn } from "lucide-react";
+import { Download, ImageDown, Printer, Share2, X, ZoomIn } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/shared/LoadingState";
@@ -85,17 +85,11 @@ export function ParticipantBadge({
     eventLocation,
   ]);
 
-  const handleDownloadBadge = async () => {
-    if (badgeBlobRef.current) {
-      downloadBadgeBlob(
-        badgeBlobRef.current,
-        `Badge-${firstName}-${lastName}.png`.replace(/\s+/g, "-"),
-      );
-      return;
-    }
+  const ensureBadgeBlob = async (): Promise<Blob | null> => {
+    if (badgeBlobRef.current) return badgeBlobRef.current;
     if (!eventStartDate || !eventEndDate || !eventLocation) {
       toast.error("Informations de l'événement incomplètes pour générer le badge.");
-      return;
+      return null;
     }
     setIsGenerating(true);
     try {
@@ -109,12 +103,50 @@ export function ParticipantBadge({
         endDate: eventEndDate,
         location: eventLocation,
       });
-      downloadBadgeBlob(blob, `Badge-${firstName}-${lastName}.png`.replace(/\s+/g, "-"));
+      badgeBlobRef.current = blob;
+      return blob;
     } catch {
       toast.error("Impossible de générer le badge. Réessayez.");
+      return null;
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleDownloadBadge = async () => {
+    const blob = await ensureBadgeBlob();
+    if (blob) {
+      downloadBadgeBlob(blob, `Badge-${firstName}-${lastName}.png`.replace(/\s+/g, "-"));
+    }
+  };
+
+  const handleShareBadge = async () => {
+    const blob = await ensureBadgeBlob();
+    if (!blob) return;
+
+    const file = new File(
+      [blob],
+      `Badge-${firstName}-${lastName}.png`.replace(/\s+/g, "-"),
+      { type: "image/png" },
+    );
+
+    if (typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: `Mon badge ${eventName || "EBENEZER"}`,
+          text: `J'y serai ! ${eventName || "EBENEZER"} - N° ${registrationNumber}`,
+        });
+      } catch {
+        // User cancelled the share sheet — nothing to do.
+      }
+      return;
+    }
+
+    downloadBadgeBlob(blob, `Badge-${firstName}-${lastName}.png`.replace(/\s+/g, "-"));
+    toast.error(
+      "Le partage direct n'est pas pris en charge sur cet appareil. Le badge a été téléchargé — partage-le manuellement.",
+    );
   };
 
   return (
@@ -157,11 +189,21 @@ export function ParticipantBadge({
         </Button>
 
         {/* Actions (excluded from print) */}
-        <div className="flex gap-2 w-full max-w-[320px] print:hidden">
+        <div className="grid grid-cols-2 gap-2 w-full max-w-[320px] print:hidden">
+          <Button
+            variant="royal"
+            size="sm"
+            className="gap-1.5"
+            loading={isGenerating}
+            onClick={handleShareBadge}
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            Partager
+          </Button>
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 gap-1.5"
+            className="gap-1.5"
             onClick={() => setShowFullscreen(true)}
           >
             <ZoomIn className="w-3.5 h-3.5" />
@@ -170,16 +212,16 @@ export function ParticipantBadge({
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 gap-1.5"
+            className="gap-1.5"
             onClick={() => downloadImage(qrCodeUrl, `QRCode-${registrationNumber}.png`)}
           >
             <Download className="w-3.5 h-3.5" />
             QR Code
           </Button>
           <Button
-            variant="royal"
+            variant="outline"
             size="sm"
-            className="flex-1 gap-1.5"
+            className="gap-1.5"
             onClick={() => window.print()}
           >
             <Printer className="w-3.5 h-3.5" />

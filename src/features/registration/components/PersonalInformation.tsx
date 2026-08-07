@@ -195,23 +195,6 @@ export function PersonalInformation({ form }: Props) {
           )}
         </div>
 
-        {/* Birth date */}
-        <div>
-          <Label htmlFor="birthDate" className="field-label">
-            Date de naissance <span className="required-star">*</span>
-          </Label>
-          <Input
-            id="birthDate"
-            type="date"
-            {...register("birthDate")}
-            error={!!errors.birthDate}
-            max={new Date().toISOString().split("T")[0]}
-          />
-          {errors.birthDate && (
-            <p className="text-xs text-red-500 mt-1">{errors.birthDate?.message as string}</p>
-          )}
-        </div>
-
         {/* Contact */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>

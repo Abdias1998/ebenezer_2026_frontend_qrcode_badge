@@ -5,7 +5,6 @@ export interface RegistrationFormData {
   firstName: string;
   lastName: string;
   gender: Gender;
-  birthDate: string;
   phone: string;
   whatsapp: string;
   email: string;
