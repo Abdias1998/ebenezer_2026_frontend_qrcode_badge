@@ -39,20 +39,20 @@ export function SuggestionsPageClient() {
   };
 
   return (
-    <main className="relative min-h-screen">
-      <div className="fixed inset-0 -z-10">
-        <Image
-          src="/image.png"
-          alt=""
-          fill
-          priority
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-black/70" />
-      </div>
+    <main className="min-h-screen bg-gray-50">
+      <div className="relative overflow-hidden py-16 px-4">
+        <div className="absolute inset-0">
+          <Image
+            src="/image.png"
+            alt=""
+            fill
+            priority
+            className="object-cover"
+          />
+          <div className="absolute inset-0 hero-gradient opacity-80" />
+        </div>
 
-      <div className="hero-gradient py-16 px-4">
-        <div className="max-w-xl mx-auto text-center">
+        <div className="relative z-10 max-w-xl mx-auto text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gold-400/20 border-4 border-gold-400/40 mb-5">
             <MessageSquareHeart className="w-8 h-8 text-gold-300" />
           </div>
