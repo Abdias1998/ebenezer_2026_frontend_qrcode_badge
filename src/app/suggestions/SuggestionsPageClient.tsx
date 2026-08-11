@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
@@ -38,7 +39,18 @@ export function SuggestionsPageClient() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="relative min-h-screen">
+      <div className="fixed inset-0 -z-10">
+        <Image
+          src="/image.png"
+          alt=""
+          fill
+          priority
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-black/70" />
+      </div>
+
       <div className="hero-gradient py-16 px-4">
         <div className="max-w-xl mx-auto text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gold-400/20 border-4 border-gold-400/40 mb-5">
