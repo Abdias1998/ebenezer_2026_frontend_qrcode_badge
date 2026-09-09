@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Check, LogOut, MessageSquareHeart, Phone, Trash2, User } from "lucide-react";
+import Link from "next/link";
+import { Check, LogOut, MessageSquareHeart, Phone, Trash2, User, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,10 +57,26 @@ export function AdminSuggestionsClient() {
             </h1>
             {user && <p className="text-xs text-gray-500">{user.email}</p>}
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={logout}>
-            <LogOut className="w-3.5 h-3.5" />
-            Déconnexion
-          </Button>
+          <div className="flex items-center gap-2">
+            <nav className="flex gap-1 mr-2">
+              <Link
+                href="/admin/suggestions"
+                className="px-3 py-1.5 text-sm font-medium rounded-lg bg-royal-100 text-royal-700"
+              >
+                Suggestions
+              </Link>
+              <Link
+                href="/admin/recruitments"
+                className="px-3 py-1.5 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                Recrutements
+              </Link>
+            </nav>
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={logout}>
+              <LogOut className="w-3.5 h-3.5" />
+              Déconnexion
+            </Button>
+          </div>
         </div>
       </div>
 
