@@ -14,6 +14,18 @@ export interface RegistrationFormData {
   acceptTerms: boolean;
 }
 
+export interface JeunesRegistrationData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  city: string;
+  country: string;
+  church?: string;
+  tshirtSize: string;
+  pickupLocation: string;
+}
+
 export interface RegistrationResponse {
   id: string;
   registrationNumber: string;
@@ -23,6 +35,11 @@ export interface RegistrationResponse {
     lastName: string;
     email: string;
     phone: string;
+    city?: string;
+    country?: string;
+    church?: string;
+    tshirtSize?: string;
+    pickupLocation?: string;
     photo?: string;
   };
   event: {
