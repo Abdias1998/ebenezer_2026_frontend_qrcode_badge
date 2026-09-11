@@ -56,11 +56,13 @@ export function JeunesPageClient() {
 
         <div className="mt-8 flex flex-col items-center gap-3 text-center">
           <p className="text-xs text-gray-500 max-w-sm">
-            Des questions ? Contactez l'équipe organisation sur WhatsApp pour
-            plus d'informations.
+            Des questions ? Écrivez-nous au{" "}
+            <strong>+229 01 49 87 28 28</strong> sur WhatsApp.
           </p>
           <a
-            href="#"
+            href="https://wa.me/2290149872828"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-full bg-gradient-gold text-white px-5 py-2.5 text-sm font-semibold shadow-soft hover:opacity-90 transition-opacity"
           >
             <Send className="w-4 h-4" />
@@ -72,15 +74,15 @@ export function JeunesPageClient() {
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-400 py-8 text-center text-sm">
         <p className="font-medium text-white mb-1">
-          EBENEZER {new Date().getFullYear()}
+          Jeûne des Jeunes {new Date().getFullYear()}
         </p>
         <p>Plateforme d'inscription officielle</p>
         <div className="flex justify-center gap-4 mt-3 text-xs">
-          <a href="/register" className="hover:text-white transition-colors">
-            S'inscrire à EBENEZER
+          <a href="/jeune-des-jeunes" className="hover:text-white transition-colors">
+            Jeûne des Jeunes
           </a>
           <span>·</span>
-          <a href="#" className="hover:text-white transition-colors">
+          <a href="https://wa.me/2290149872828" className="hover:text-white transition-colors">
             Contact
           </a>
         </div>
