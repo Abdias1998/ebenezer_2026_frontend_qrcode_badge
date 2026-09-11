@@ -1,10 +1,30 @@
 import { z } from "zod";
-import { TSHIRT_SIZES, PICKUP_LOCATIONS } from "@/features/jeunes/constants";
+import {
+  TSHIRT_SIZES,
+  PICKUP_LOCATIONS,
+  PAYMENT_NETWORKS,
+} from "@/features/jeunes/constants";
 
 const isValidPhone = (val: string) => {
   const digits = val.replace(/\D/g, "");
   return digits.length >= 8 && digits.length <= 15;
 };
+
+const isValidBeninMomoPhone = (val: string) => {
+  const digits = val.replace(/\D/g, "");
+  if (digits.startsWith("229")) {
+    return /^22901\d{8}$/.test(digits);
+  }
+  if (!digits.startsWith("01")) {
+    return false;
+  }
+  return digits.length === 10;
+};
+
+const paymentNetworkOptions = PAYMENT_NETWORKS.map((n) => n.value) as [
+  string,
+  ...string[],
+];
 
 export const jeunesRegistrationSchema = z.object({
   firstName: z
@@ -31,6 +51,15 @@ export const jeunesRegistrationSchema = z.object({
   pickupLocation: z.enum(PICKUP_LOCATIONS, {
     required_error: "Veuillez sélectionner votre lieu de prise en charge",
   }),
+  paymentNetwork: z.enum(paymentNetworkOptions, {
+    required_error: "Veuillez choisir un réseau Mobile Money",
+  }),
+  paymentPhone: z
+    .string()
+    .min(1, "Veuillez indiquer votre numéro Mobile Money")
+    .refine(isValidBeninMomoPhone, {
+      message: "Numéro Mobile Money invalide (ex : 01XXXXXXXX)",
+    }),
 });
 
 export type JeunesSchemaType = z.infer<typeof jeunesRegistrationSchema>;

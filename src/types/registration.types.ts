@@ -24,6 +24,31 @@ export interface JeunesRegistrationData {
   church?: string;
   tshirtSize: string;
   pickupLocation: string;
+  paymentNetwork: string;
+  paymentPhone: string;
+}
+
+export type PayinNetwork = "mtn" | "moov" | "celtiis_bj";
+
+export interface InitiatePaymentPayload {
+  network: PayinNetwork;
+  phoneNumber: string;
+  amount: number;
+}
+
+export interface InitiatedPayment {
+  reference: string;
+  network: PayinNetwork;
+  amount: number;
+}
+
+export type FeexPayStatus = "PENDING" | "SUCCESSFUL" | "FAILED";
+
+export interface PaymentStatus {
+  reference: string;
+  status: FeexPayStatus;
+  amount?: number;
+  phoneNumber?: string;
 }
 
 export interface RegistrationResponse {
