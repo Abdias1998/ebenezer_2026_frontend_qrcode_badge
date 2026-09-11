@@ -78,7 +78,7 @@ export function JeunesPageClient() {
         </p>
         <p>Plateforme d'inscription officielle</p>
         <div className="flex justify-center gap-4 mt-3 text-xs">
-          <a href="/jeune-des-jeunes" className="hover:text-white transition-colors">
+          <a href="/inscription/jeune-des-jeunes" className="hover:text-white transition-colors">
             Jeûne des Jeunes
           </a>
           <span>·</span>
