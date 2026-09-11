@@ -11,14 +11,17 @@ const isValidPhone = (val: string) => {
 };
 
 const isValidBeninMomoPhone = (val: string) => {
-  const digits = val.replace(/\D/g, "");
+  let digits = val.replace(/\D/g, "");
+  if (digits.startsWith("00")) {
+    digits = digits.slice(2);
+  }
   if (digits.startsWith("229")) {
-    return /^22901\d{8}$/.test(digits);
+    digits = digits.slice(3);
   }
-  if (!digits.startsWith("01")) {
-    return false;
+  if (digits.startsWith("01")) {
+    return digits.length === 10 && /^01[1-9]\d{7}$/.test(digits);
   }
-  return digits.length === 10;
+  return /^[1-9]\d{7}$/.test(digits);
 };
 
 const paymentNetworkOptions = PAYMENT_NETWORKS.map((n) => n.value) as [
@@ -58,7 +61,8 @@ export const jeunesRegistrationSchema = z.object({
     .string()
     .min(1, "Veuillez indiquer votre numéro Mobile Money")
     .refine(isValidBeninMomoPhone, {
-      message: "Numéro Mobile Money invalide (ex : 01XXXXXXXX)",
+      message:
+        "Numéro Mobile Money invalide (ex : 0167919100 ou 67919150)",
     }),
 });
 

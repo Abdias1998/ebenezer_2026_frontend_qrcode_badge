@@ -616,7 +616,7 @@ export function JeunesForm({ eventId, eventName }: Props) {
                 type="tel"
                 inputMode="tel"
                 {...register("paymentPhone")}
-                placeholder="01 9X XX XX XX"
+                placeholder="0167919100"
                 error={!!errors.paymentPhone}
               />
               {errors.paymentPhone && (
