@@ -40,6 +40,8 @@ export interface InitiatedPayment {
   reference: string;
   network: PayinNetwork;
   amount: number;
+  status?: FeexPayStatus;
+  reason?: string;
 }
 
 export type FeexPayStatus = "PENDING" | "SUCCESSFUL" | "FAILED";
@@ -49,6 +51,7 @@ export interface PaymentStatus {
   status: FeexPayStatus;
   amount?: number;
   phoneNumber?: string;
+  reason?: string;
 }
 
 export interface RegistrationResponse {

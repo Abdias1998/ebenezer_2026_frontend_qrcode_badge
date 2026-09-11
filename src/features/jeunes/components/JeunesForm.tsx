@@ -36,8 +36,28 @@ import { feexpayService } from "@/services/feexpay.service";
 import { scrollToFirstError, COUNTRIES } from "@/lib/utils";
 import type { RegistrationResponse } from "@/types/registration.types";
 
-const POLL_INTERVAL_MS = 3_000;
-const PAYMENT_TIMEOUT_MS = 120_000;
+const POLL_INTERVAL_MS = 15_000;
+const PAYMENT_TIMEOUT_MS = 300_000;
+
+const PAYMENT_REASON_LABELS: Record<string, string> = {
+  LOW_BALANCE_OR_PAYEE_LIMIT_REACHED_OR_NOT_ALLOWED:
+    "Solde insuffisant ou limite de paiement de votre compte atteinte.",
+  EXCEEDED_LIMIT: "Vous avez dépassé la limite de paiement autorisée.",
+  TRANSACTION_FAILED: "La transaction a échoué chez l'opérateur.",
+  INSUFFICIENT_FUNDS: "Solde insuffisant pour effectuer ce paiement.",
+  OPERATION_TIMED_OUT:
+    "L'opération a expiré. Vous n'avez pas confirmé le paiement à temps.",
+  PAYEE_NOT_REACHABLE: "Le numéro indiqué n'est pas joignable.",
+  INVALID_PHONE_NUMBER:
+    "Le numéro Mobile Money est invalide pour ce réseau.",
+};
+
+function paymentFailureMessage(reason?: string): string {
+  if (!reason) {
+    return "Le paiement a échoué. Veuillez réessayer.";
+  }
+  return PAYMENT_REASON_LABELS[reason] ?? `Le paiement a échoué. Motif : ${reason}.`;
+}
 
 interface Props {
   eventId: string;
@@ -120,9 +140,7 @@ export function JeunesForm({ eventId, eventName }: Props) {
         } else if (status.status === "FAILED") {
           stopPolling();
           setStep("form");
-          setSubmitError(
-            "Le paiement a échoué. Veuillez vérifier votre compte et réessayer.",
-          );
+          setSubmitError(paymentFailureMessage(status.reason));
         }
       }, POLL_INTERVAL_MS);
 
@@ -142,13 +160,28 @@ export function JeunesForm({ eventId, eventName }: Props) {
       setSubmitError(null);
       setIsPending(true);
       try {
-        const { reference } = await feexpayService.initiate({
+        const payment = await feexpayService.initiate({
           network: data.paymentNetwork as "mtn" | "moov" | "celtiis_bj",
           phoneNumber: data.paymentPhone,
           amount: JDJ_REGISTRATION_FEE,
         });
-        setStep("pending");
-        await pollPaymentStatus(reference, data);
+
+        const isMoov = data.paymentNetwork === "moov";
+
+        if (isMoov && payment.status === "SUCCESSFUL") {
+          // Moov renvoie SUCCESSFUL directement, pas de polling
+          const registration = await jeunesService.submit(data, eventId, {
+            paymentRef: payment.reference,
+            paymentAmount: JDJ_REGISTRATION_FEE,
+          });
+          setResult(registration);
+          setStep("done");
+        } else if (isMoov && payment.status === "FAILED") {
+          setSubmitError(paymentFailureMessage(payment.reason));
+        } else {
+          setStep("pending");
+          await pollPaymentStatus(payment.reference, data);
+        }
       } catch (error: any) {
         const message = error?.message || "Une erreur est survenue";
         setSubmitError(message);
@@ -215,7 +248,8 @@ export function JeunesForm({ eventId, eventName }: Props) {
             <Loader2 className="w-6 h-6 text-royal-600 animate-spin" />
             <p className="text-xs text-gray-500 flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" />
-              En attente de confirmation…
+              En attente de confirmation (vérification toutes les 15
+              secondes)…
             </p>
             <Button
               type="button"
