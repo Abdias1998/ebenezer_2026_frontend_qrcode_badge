@@ -40,7 +40,7 @@ export function JeunesForm({ eventId, eventName }: Props) {
   const form = useForm<JeunesSchemaType>({
     resolver: zodResolver(jeunesRegistrationSchema),
     defaultValues: {
-      country: "Togo",
+      country: "Bénin",
     },
     mode: "onTouched",
   });
