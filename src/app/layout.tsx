@@ -13,8 +13,8 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "fr_FR",
-    title: "EBENEZER — Inscription",
-    description: "Réservez votre place pour cinq jours de restauration et d'adoration.",
+    title: "JEÛNE DES JEUNES — Inscription",
+    description: "La Grâce Parle",
     siteName: "EBENEZER",
   },
   twitter: {

@@ -5,10 +5,13 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
+  Church,
   Download,
   LogOut,
   Mail,
+  MapPin,
   Phone,
+  Shirt,
   Ticket,
   User,
   Wallet,
@@ -252,10 +255,58 @@ function RegistrationCard({
             )}
           </div>
 
+          <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-600">
+            {registration.participant?.tshirtSize && (
+              <span className="flex items-center gap-1">
+                <Shirt className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                T-shirt :{" "}
+                <span className="font-medium text-gray-700">
+                  {registration.participant.tshirtSize}
+                </span>
+              </span>
+            )}
+            {registration.participant?.pickupLocation && (
+              <span className="flex items-center gap-1 sm:col-span-2">
+                <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                Prise en charge :{" "}
+                <span className="font-medium text-gray-700 truncate">
+                  {registration.participant.pickupLocation}
+                </span>
+              </span>
+            )}
+            {registration.participant?.city && (
+              <span className="flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                Ville :{" "}
+                <span className="font-medium text-gray-700">
+                  {registration.participant.city}
+                </span>
+              </span>
+            )}
+            {registration.participant?.country && (
+              <span className="flex items-center gap-1">
+                Pays :{" "}
+                <span className="font-medium text-gray-700">
+                  {registration.participant.country}
+                </span>
+              </span>
+            )}
+            {registration.participant?.church && (
+              <span className="flex items-center gap-1 sm:col-span-2">
+                <Church className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                Église :{" "}
+                <span className="font-medium text-gray-700 truncate">
+                  {registration.participant.church}
+                </span>
+              </span>
+            )}
+          </div>
+
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
             {network && (
               <span>
-                Réseau : <span className="font-medium text-gray-700">{network}</span>
+                Réseau :{" "}
+                <span className="font-medium text-gray-700">{network}</span>
               </span>
             )}
             {registration.paymentPhone && (
