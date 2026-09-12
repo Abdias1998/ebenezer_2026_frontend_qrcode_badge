@@ -144,6 +144,16 @@ limit: 20,
               variant="outline"
               size="sm"
               className="gap-1.5"
+              disabled={exporting}
+              onClick={handleExport}
+            >
+              <FileDown className="w-3.5 h-3.5" />
+              {exporting ? "Génération..." : "Exporter le PDF"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
               onClick={logout}
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -163,23 +173,11 @@ limit: 20,
         )}
 
         {data && (
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm text-gray-500">
-              {data.meta.total} personne
-              {data.meta.total > 1 ? "s" : ""} a
-              {data.meta.total > 1 ? "ont" : ""} payé pour le Jeûne des Jeunes.
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 shrink-0"
-              disabled={exporting || data.meta.total === 0}
-              onClick={handleExport}
-            >
-              <FileDown className="w-3.5 h-3.5" />
-              {exporting ? "Génération..." : "Exporter le PDF"}
-            </Button>
-          </div>
+          <p className="text-sm text-gray-500">
+            {data.meta.total} personne
+            {data.meta.total > 1 ? "s" : ""} a
+            {data.meta.total > 1 ? "ont" : ""} payé pour le Jeûne des Jeunes.
+          </p>
         )}
 
         {isLoading && <LoadingState message="Chargement des paiements..." />}
