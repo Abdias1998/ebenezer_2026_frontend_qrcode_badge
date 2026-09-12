@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import {
   Church,
   Download,
+  FileDown,
   LogOut,
   Mail,
   MapPin,
@@ -30,7 +31,7 @@ import { LoadingState } from "@/components/shared/LoadingState";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { registrationService } from "@/services/registration.service";
-import { downloadImage, formatDate } from "@/lib/utils";
+import { downloadFile, downloadImage, formatDate } from "@/lib/utils";
 import type { AdminRegistration } from "@/types/registration.types";
 
 const JDJ_EVENT_ID = process.env.NEXT_PUBLIC_JDJ_EVENT_ID || "";
@@ -60,6 +61,7 @@ export function AdminJeunesClient() {
   const { user, isChecking, logout } = useAdminAuth();
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<AdminRegistration | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const hasEventId = JDJ_EVENT_ID.length > 0;
 
@@ -70,10 +72,33 @@ export function AdminJeunesClient() {
         eventId: hasEventId ? JDJ_EVENT_ID : undefined,
         paid: true,
         page,
-        limit: 20,
-      }),
+limit: 20,
+    }),
     enabled: !isChecking && !!user,
   });
+
+  const handleExport = async () => {
+    if (!hasEventId) {
+      toast.error("Identifiant d'événement manquant.");
+      return;
+    }
+    setExporting(true);
+    try {
+      const blob = await registrationService.exportListToPdf({
+        eventId: JDJ_EVENT_ID,
+        paid: true,
+      });
+      const url = URL.createObjectURL(blob);
+      downloadFile(url, "inscrits-jeunes-des-jeunes.pdf");
+      URL.revokeObjectURL(url);
+      toast.success("PDF généré avec succès.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Impossible de générer le PDF.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   if (isChecking) {
     return (
@@ -138,11 +163,23 @@ export function AdminJeunesClient() {
         )}
 
         {data && (
-          <p className="text-sm text-gray-500">
-            {data.meta.total} personne
-            {data.meta.total > 1 ? "s" : ""} a
-            {data.meta.total > 1 ? "ont" : ""} payé pour le Jeûne des Jeunes.
-          </p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm text-gray-500">
+              {data.meta.total} personne
+              {data.meta.total > 1 ? "s" : ""} a
+              {data.meta.total > 1 ? "ont" : ""} payé pour le Jeûne des Jeunes.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 shrink-0"
+              disabled={exporting || data.meta.total === 0}
+              onClick={handleExport}
+            >
+              <FileDown className="w-3.5 h-3.5" />
+              {exporting ? "Génération..." : "Exporter le PDF"}
+            </Button>
+          </div>
         )}
 
         {isLoading && <LoadingState message="Chargement des paiements..." />}

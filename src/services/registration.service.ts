@@ -43,6 +43,20 @@ export const registrationService = {
     return { items: response.data.data, meta: response.data.meta };
   },
 
+  async exportListToPdf(params: {
+    eventId?: string;
+    paid?: boolean;
+  } = {}): Promise<Blob> {
+    const response = await apiClient.get<Blob>("/registrations/export", {
+      params: {
+        event: params.eventId,
+        paid: params.paid === true ? "true" : undefined,
+      },
+      responseType: "blob",
+    });
+    return response.data;
+  },
+
   async getRegistration(id: string): Promise<RegistrationResponse> {
     const response = await apiClient.get<{ data: RegistrationResponse }>(
       `/registrations/${id}`,
