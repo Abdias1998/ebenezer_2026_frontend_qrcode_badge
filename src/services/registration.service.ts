@@ -1,5 +1,10 @@
 import apiClient from "@/lib/axios";
-import type { RegistrationFormData, RegistrationResponse } from "@/types/registration.types";
+import type {
+  AdminRegistration,
+  PaginatedAdminRegistrations,
+  RegistrationFormData,
+  RegistrationResponse,
+} from "@/types/registration.types";
 
 export const registrationService = {
   async createRegistration(
@@ -16,6 +21,26 @@ export const registrationService = {
     );
 
     return response.data.data;
+  },
+
+  async list(params: {
+    eventId?: string;
+    paid?: boolean;
+    page?: number;
+    limit?: number;
+  } = {}): Promise<PaginatedAdminRegistrations> {
+    const response = await apiClient.get<{
+      data: PaginatedAdminRegistrations["items"];
+      meta: PaginatedAdminRegistrations["meta"];
+    }>("/registrations", {
+      params: {
+        page: params.page ?? 1,
+        limit: params.limit ?? 20,
+        event: params.eventId,
+        paid: params.paid === true ? "true" : undefined,
+      },
+    });
+    return { items: response.data.data, meta: response.data.meta };
   },
 
   async getRegistration(id: string): Promise<RegistrationResponse> {

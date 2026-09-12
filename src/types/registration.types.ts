@@ -34,6 +34,8 @@ export interface InitiatePaymentPayload {
   network: PayinNetwork;
   phoneNumber: string;
   amount: number;
+  firstName: string;
+  lastName: string;
 }
 
 export interface InitiatedPayment {
@@ -97,6 +99,46 @@ export interface EventInfo {
   registeredCount: number;
   remainingSlots: number;
   status: "active" | "closed" | "upcoming" | "completed";
+}
+
+export interface AdminRegistration {
+  _id: string;
+  id: string;
+  registrationNumber: string;
+  status: "pending" | "confirmed" | "checked-in" | "cancelled";
+  paymentRef?: string;
+  paymentNetwork?: string;
+  paymentPhone?: string;
+  paymentAmount?: number;
+  qrCode: string;
+  participant?: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
+    phone?: string;
+    city?: string;
+    country?: string;
+    church?: string;
+    tshirtSize?: string;
+    pickupLocation?: string;
+  };
+  event?: {
+    _id: string;
+    name?: string;
+    registrationPrefix?: string;
+  };
+  createdAt: string;
+}
+
+export interface PaginatedAdminRegistrations {
+  items: AdminRegistration[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
 }
 
 export interface ApiError {

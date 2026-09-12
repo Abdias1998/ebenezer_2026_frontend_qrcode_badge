@@ -71,6 +71,12 @@ export function AdminSuggestionsClient() {
               >
                 Recrutements
               </Link>
+              <Link
+                href="/admin/jeunes"
+                className="px-3 py-1.5 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                Jeûne des Jeunes
+              </Link>
             </nav>
             <Button variant="outline" size="sm" className="gap-1.5" onClick={logout}>
               <LogOut className="w-3.5 h-3.5" />

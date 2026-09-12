@@ -164,6 +164,8 @@ export function JeunesForm({ eventId, eventName }: Props) {
           network: data.paymentNetwork as "mtn" | "moov" | "celtiis_bj",
           phoneNumber: data.paymentPhone,
           amount: JDJ_REGISTRATION_FEE,
+          firstName: data.firstName,
+          lastName: data.lastName,
         });
 
         const isMoov = data.paymentNetwork === "moov";
