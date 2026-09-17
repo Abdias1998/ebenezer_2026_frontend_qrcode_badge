@@ -36,6 +36,7 @@ export interface InitiatePaymentPayload {
   amount: number;
   firstName: string;
   lastName: string;
+  callbackInfo?: Record<string, unknown>;
 }
 
 export interface InitiatedPayment {
@@ -99,6 +100,23 @@ export interface EventInfo {
   registeredCount: number;
   remainingSlots: number;
   status: "active" | "closed" | "upcoming" | "completed";
+}
+
+export interface RattrapagePayload {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email?: string;
+  city?: string;
+  country?: string;
+  church?: string;
+  tshirtSize?: string;
+  pickupLocation?: string;
+  eventId: string;
+  paymentRef: string;
+  paymentNetwork?: string;
+  paymentPhone?: string;
+  paymentAmount?: number;
 }
 
 export interface AdminRegistration {

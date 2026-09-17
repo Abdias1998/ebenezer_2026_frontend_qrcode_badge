@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -15,6 +15,7 @@ import {
   Shirt,
   Ticket,
   User,
+  UserPlus,
   Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -27,12 +28,27 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { LoadingState } from "@/components/shared/LoadingState";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { registrationService } from "@/services/registration.service";
 import { downloadFile, downloadImage, formatDate } from "@/lib/utils";
 import type { AdminRegistration } from "@/types/registration.types";
+import {
+  TSHIRT_SIZES,
+  PICKUP_LOCATIONS,
+  PAYMENT_NETWORKS,
+  JDJ_REGISTRATION_FEE,
+} from "@/features/jeunes/constants";
 
 const JDJ_EVENT_ID = process.env.NEXT_PUBLIC_JDJ_EVENT_ID || "";
 
@@ -61,6 +77,7 @@ export function AdminJeunesClient() {
   const { user, isChecking, logout } = useAdminAuth();
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<AdminRegistration | null>(null);
+  const [showRattrapage, setShowRattrapage] = useState(false);
   const [exporting, setExporting] = useState(false);
 
   const hasEventId = JDJ_EVENT_ID.length > 0;
@@ -140,6 +157,16 @@ limit: 20,
                 Jeûne des Jeunes
               </Link>
             </nav>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              disabled={!hasEventId}
+              onClick={() => setShowRattrapage(true)}
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              Rattrapage
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -232,6 +259,16 @@ limit: 20,
       <QrDialog
         registration={selected}
         onClose={() => setSelected(null)}
+      />
+
+      <RattrapageDialog
+        eventId={JDJ_EVENT_ID}
+        open={showRattrapage}
+        onClose={() => setShowRattrapage(false)}
+        onCreated={() => {
+          setShowRattrapage(false);
+          refetch();
+        }}
       />
     </main>
   );
@@ -435,6 +472,325 @@ function QrDialog({
             <Download className="w-3.5 h-3.5" />
             Télécharger le QR
           </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+const EMPTY_RATTRAPAGE_FORM = {
+  paymentRef: "",
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  city: "",
+  country: "Bénin",
+  church: "",
+  tshirtSize: "",
+  pickupLocation: "",
+  paymentNetwork: "",
+  paymentPhone: "",
+  paymentAmount: JDJ_REGISTRATION_FEE,
+};
+
+type RattrapageStringField = Exclude<
+  keyof typeof EMPTY_RATTRAPAGE_FORM,
+  "paymentAmount"
+>;
+
+function RattrapageDialog({
+  eventId,
+  open,
+  onClose,
+  onCreated,
+}: {
+  eventId: string;
+  open: boolean;
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const [form, setForm] = useState(EMPTY_RATTRAPAGE_FORM);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (open) setForm(EMPTY_RATTRAPAGE_FORM);
+  }, [open]);
+
+  const set =
+    (key: RattrapageStringField) =>
+    (value: string) =>
+      setForm((f) => ({ ...f, [key]: value }));
+
+  const handleSubmit = async () => {
+    const required: Array<[RattrapageStringField, string]> = [
+      ["paymentRef", "la référence de paiement"],
+      ["firstName", "le prénom"],
+      ["lastName", "le nom"],
+      ["phone", "le numéro de téléphone"],
+      ["city", "la ville"],
+    ];
+    for (const [key, label] of required) {
+      if (!form[key].trim()) {
+        toast.error(`Veuillez renseigner ${label}.`);
+        return;
+      }
+    }
+    if (!eventId) {
+      toast.error(
+        "Identifiant d'événement manquant (NEXT_PUBLIC_JDJ_EVENT_ID).",
+      );
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const registration = await registrationService.rattrapage({
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email || undefined,
+        phone: form.phone,
+        city: form.city,
+        country: form.country,
+        church: form.church || undefined,
+        tshirtSize: form.tshirtSize || undefined,
+        pickupLocation: form.pickupLocation || undefined,
+        eventId,
+        paymentRef: form.paymentRef,
+        paymentNetwork: form.paymentNetwork || undefined,
+        paymentPhone: form.paymentPhone || undefined,
+        paymentAmount: Number(form.paymentAmount) || undefined,
+      });
+      toast.success(
+        `Inscription ${registration.registrationNumber} créée avec succès.`,
+      );
+      onCreated();
+    } catch (error: any) {
+      const message = error?.message || "Impossible de créer l'inscription.";
+      toast.error(message);
+      console.error(error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <UserPlus className="w-5 h-5 text-royal-600" />
+            Rattrapage d'un paiement
+          </DialogTitle>
+          <DialogDescription>
+            Créez une inscription à partir d'une référence de paiement FeexPay
+            déjà confirmée (ex. paiement Celtiis non enregistré).
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 pt-1">
+          <div>
+            <Label htmlFor="rt-paymentRef" className="field-label">
+              Référence de paiement FeexPay{" "}
+              <span className="required-star">*</span>
+            </Label>
+            <Input
+              id="rt-paymentRef"
+              className="font-mono text-xs"
+              placeholder="AG_20260917_..."
+              value={form.paymentRef}
+              onChange={(e) => set("paymentRef")(e.target.value)}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="rt-lastName" className="field-label">
+                Nom <span className="required-star">*</span>
+              </Label>
+              <Input
+                id="rt-lastName"
+                value={form.lastName}
+                onChange={(e) => set("lastName")(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="rt-firstName" className="field-label">
+                Prénom(s) <span className="required-star">*</span>
+              </Label>
+              <Input
+                id="rt-firstName"
+                value={form.firstName}
+                onChange={(e) => set("firstName")(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="rt-email" className="field-label">
+                Email
+              </Label>
+              <Input
+                id="rt-email"
+                type="email"
+                value={form.email}
+                onChange={(e) => set("email")(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="rt-phone" className="field-label">
+                Téléphone <span className="required-star">*</span>
+              </Label>
+              <Input
+                id="rt-phone"
+                type="tel"
+                value={form.phone}
+                onChange={(e) => set("phone")(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="rt-city" className="field-label">
+                Ville <span className="required-star">*</span>
+              </Label>
+              <Input
+                id="rt-city"
+                value={form.city}
+                onChange={(e) => set("city")(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="rt-country" className="field-label">
+                Pays
+              </Label>
+              <Input
+                id="rt-country"
+                value={form.country}
+                onChange={(e) => set("country")(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="rt-church" className="field-label">
+              Église / Organisation
+            </Label>
+            <Input
+              id="rt-church"
+              value={form.church}
+              onChange={(e) => set("church")(e.target.value)}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="rt-tshirt" className="field-label">
+                Taille de t-shirt
+              </Label>
+              <Select value={form.tshirtSize} onValueChange={set("tshirtSize")}>
+                <SelectTrigger id="rt-tshirt">
+                  <SelectValue placeholder="Choisir la taille" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TSHIRT_SIZES.map((size) => (
+                    <SelectItem key={size} value={size}>
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="rt-pickup" className="field-label">
+                Lieu de prise en charge
+              </Label>
+              <Select
+                value={form.pickupLocation}
+                onValueChange={set("pickupLocation")}
+              >
+                <SelectTrigger id="rt-pickup">
+                  <SelectValue placeholder="Choisir le lieu" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {PICKUP_LOCATIONS.map((location) => (
+                    <SelectItem key={location} value={location}>
+                      {location}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="rt-network" className="field-label">
+                Réseau de paiement
+              </Label>
+              <Select
+                value={form.paymentNetwork}
+                onValueChange={set("paymentNetwork")}
+              >
+                <SelectTrigger id="rt-network">
+                  <SelectValue placeholder="Choisir le réseau" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_NETWORKS.map((network) => (
+                    <SelectItem key={network.value} value={network.value}>
+                      {network.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="rt-paymentPhone" className="field-label">
+                Numéro Mobile Money
+              </Label>
+              <Input
+                id="rt-paymentPhone"
+                type="tel"
+                value={form.paymentPhone}
+                onChange={(e) => set("paymentPhone")(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="rt-amount" className="field-label">
+              Montant payé (FCFA)
+            </Label>
+            <Input
+              id="rt-amount"
+              type="number"
+              min={0}
+              value={form.paymentAmount}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  paymentAmount: Number(e.target.value),
+                }))
+              }
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={onClose} disabled={submitting}>
+              Annuler
+            </Button>
+            <Button
+              variant="royal"
+              loading={submitting}
+              className="gap-1.5"
+              onClick={handleSubmit}
+            >
+              <UserPlus className="w-4 h-4" />
+              Créer l'inscription
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

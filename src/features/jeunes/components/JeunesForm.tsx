@@ -166,6 +166,20 @@ export function JeunesForm({ eventId, eventName }: Props) {
           amount: JDJ_REGISTRATION_FEE,
           firstName: data.firstName,
           lastName: data.lastName,
+          callbackInfo: {
+            eventId,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+            phone: data.phone,
+            city: data.city,
+            country: data.country,
+            church: data.church ?? "",
+            tshirtSize: data.tshirtSize,
+            pickupLocation: data.pickupLocation,
+            paymentNetwork: data.paymentNetwork,
+            paymentPhone: data.paymentPhone,
+          },
         });
 
         const isMoov = data.paymentNetwork === "moov";

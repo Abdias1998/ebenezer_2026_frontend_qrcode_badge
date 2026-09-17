@@ -2,6 +2,7 @@ import apiClient from "@/lib/axios";
 import type {
   AdminRegistration,
   PaginatedAdminRegistrations,
+  RattrapagePayload,
   RegistrationFormData,
   RegistrationResponse,
 } from "@/types/registration.types";
@@ -55,6 +56,14 @@ export const registrationService = {
       responseType: "blob",
     });
     return response.data;
+  },
+
+  async rattrapage(data: RattrapagePayload): Promise<RegistrationResponse> {
+    const response = await apiClient.post<{ data: RegistrationResponse }>(
+      "/registrations/rattrapage",
+      data,
+    );
+    return response.data.data;
   },
 
   async getRegistration(id: string): Promise<RegistrationResponse> {
