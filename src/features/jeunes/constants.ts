@@ -1,4 +1,4 @@
-export const TSHIRT_SIZES = ["XS", "S", "M", "L", "XL", "XXL"] as const;
+export const TSHIRT_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"] as const;
 
 export const PICKUP_LOCATIONS = [
 
