@@ -159,6 +159,30 @@ export interface PaginatedAdminRegistrations {
   };
 }
 
+export interface RegistrationStats {
+  total: number;
+  byTshirtSize: { value: string; count: number }[];
+  byPickupLocation: { value: string; count: number }[];
+  byCity: { value: string; count: number }[];
+  byChurch: { value: string; count: number }[];
+  byPaymentNetwork: { value: string; count: number }[];
+  byStatus: { value: string; count: number }[];
+}
+
+export interface RegistrationListParams {
+  eventId?: string;
+  paid?: boolean;
+  page?: number;
+  limit?: number;
+  tshirtSize?: string;
+  pickupLocation?: string;
+  city?: string;
+  church?: string;
+  paymentNetwork?: string;
+  status?: string;
+  search?: string;
+}
+
 export interface ApiError {
   success: false;
   statusCode: number;

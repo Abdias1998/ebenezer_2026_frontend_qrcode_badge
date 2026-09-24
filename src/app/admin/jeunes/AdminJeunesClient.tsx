@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -12,11 +12,13 @@ import {
   Mail,
   MapPin,
   Phone,
+  Search,
   Shirt,
   Ticket,
   User,
   UserPlus,
   Wallet,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -42,7 +44,10 @@ import { ErrorState } from "@/components/shared/ErrorState";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { registrationService } from "@/services/registration.service";
 import { downloadFile, downloadImage, formatDate } from "@/lib/utils";
-import type { AdminRegistration } from "@/types/registration.types";
+import type {
+  AdminRegistration,
+  RegistrationListParams,
+} from "@/types/registration.types";
 import {
   TSHIRT_SIZES,
   PICKUP_LOCATIONS,
@@ -73,26 +78,108 @@ function formatAmount(amount?: number): string {
   return `${amount.toLocaleString("fr-FR")} FCFA`;
 }
 
+function StatChips({
+  title,
+  icon,
+  items,
+  activeValue,
+  filterKey,
+  onToggle,
+}: {
+  title: string;
+  icon: ReactNode;
+  items: { value: string; count: number }[];
+  activeValue: string;
+  filterKey: keyof RegistrationListParams;
+  onToggle: (key: keyof RegistrationListParams, value: string) => void;
+}) {
+  if (items.length === 0) return null;
+
+  return (
+    <div>
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
+        {icon}
+        {title}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {items.map((item) => {
+          const active = activeValue === item.value;
+          return (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() => onToggle(filterKey, item.value)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                active
+                  ? "bg-royal-600 text-white border-royal-600"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-royal-300 hover:text-royal-700"
+              }`}
+            >
+              {item.value} · {item.count}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function AdminJeunesClient() {
   const { user, isChecking, logout } = useAdminAuth();
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<AdminRegistration | null>(null);
   const [showRattrapage, setShowRattrapage] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [filters, setFilters] = useState<RegistrationListParams>({});
 
   const hasEventId = JDJ_EVENT_ID.length > 0;
 
+  const appliedFilters = {
+    eventId: hasEventId ? JDJ_EVENT_ID : undefined,
+    paid: true,
+    tshirtSize: filters.tshirtSize || undefined,
+    pickupLocation: filters.pickupLocation || undefined,
+    city: filters.city || undefined,
+    church: filters.church || undefined,
+    paymentNetwork: filters.paymentNetwork || undefined,
+    status: filters.status || undefined,
+    search: filters.search || undefined,
+  };
+
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["jeunes-paid-registrations", page],
-    queryFn: () =>
-      registrationService.list({
-        eventId: hasEventId ? JDJ_EVENT_ID : undefined,
-        paid: true,
-        page,
-limit: 20,
-    }),
+    queryKey: ["jeunes-paid-registrations", page, appliedFilters],
+    queryFn: () => registrationService.list({ ...appliedFilters, page, limit: 20 }),
     enabled: !isChecking && !!user,
   });
+
+  const {
+    data: stats,
+    isError: statsError,
+    refetch: refetchStats,
+  } = useQuery({
+    queryKey: ["jeunes-registrations-stats", JDJ_EVENT_ID],
+    queryFn: () =>
+      registrationService.stats({
+        eventId: hasEventId ? JDJ_EVENT_ID : undefined,
+        paid: true,
+      }),
+    enabled: !isChecking && !!user,
+  });
+
+  const setFilter = (key: keyof RegistrationListParams, value: string) => {
+    setFilters((f) => ({ ...f, [key]: value || undefined }));
+    setPage(1);
+  };
+
+  const toggleFilter = (key: keyof RegistrationListParams, value: string) => {
+    const isActive = filters[key] === value;
+    setFilter(key, isActive ? "" : value);
+  };
+
+  const resetFilters = () => {
+    setFilters({});
+    setPage(1);
+  };
 
   const handleExport = async () => {
     if (!hasEventId) {
@@ -128,7 +215,7 @@ limit: 20,
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-lg font-bold text-gray-900 flex items-center gap-2">
               <Wallet className="w-5 h-5 text-royal-600" />
@@ -199,11 +286,112 @@ limit: 20,
           </div>
         )}
 
-        {data && (
+        {hasEventId && (
+          <div className="form-section space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="relative sm:col-span-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  className="pl-9"
+                  placeholder="Rechercher (nom, prénom, email, téléphone)"
+                  value={filters.search ?? ""}
+                  onChange={(e) => setFilter("search", e.target.value)}
+                />
+              </div>
+              <div>
+                <Select
+                  value={filters.paymentNetwork ?? ""}
+                  onValueChange={(v) => setFilter("paymentNetwork", v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Réseau de paiement" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAYMENT_NETWORKS.map((network) => (
+                      <SelectItem key={network.value} value={network.value}>
+                        {network.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Select
+                  value={filters.status ?? ""}
+                  onValueChange={(v) => setFilter("status", v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Statut" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(STATUS_CONFIG).map(([value, cfg]) => (
+                      <SelectItem key={value} value={value}>
+                        {cfg.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {stats && (
+              <div className="space-y-3">
+                <StatChips
+                  title="Taille de t-shirt"
+                  icon={<Shirt className="w-3.5 h-3.5" />}
+                  items={stats.byTshirtSize}
+                  activeValue={filters.tshirtSize ?? ""}
+                  filterKey="tshirtSize"
+                  onToggle={toggleFilter}
+                />
+                <StatChips
+                  title="Lieu de prise en charge"
+                  icon={<MapPin className="w-3.5 h-3.5" />}
+                  items={stats.byPickupLocation}
+                  activeValue={filters.pickupLocation ?? ""}
+                  filterKey="pickupLocation"
+                  onToggle={toggleFilter}
+                />
+                <StatChips
+                  title="Ville"
+                  icon={<MapPin className="w-3.5 h-3.5" />}
+                  items={stats.byCity}
+                  activeValue={filters.city ?? ""}
+                  filterKey="city"
+                  onToggle={toggleFilter}
+                />
+                <StatChips
+                  title="Église / organisation"
+                  icon={<Church className="w-3.5 h-3.5" />}
+                  items={stats.byChurch}
+                  activeValue={filters.church ?? ""}
+                  filterKey="church"
+                  onToggle={toggleFilter}
+                />
+              </div>
+            )}
+
+            {Object.values(filters).some((v) => !!v) && !statsError && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-gray-600"
+                onClick={resetFilters}
+              >
+                <X className="w-3.5 h-3.5" />
+                Réinitialiser les filtres
+              </Button>
+            )}
+          </div>
+        )}
+
+        {stats && (
           <p className="text-sm text-gray-500">
-            {data.meta.total} personne
-            {data.meta.total > 1 ? "s" : ""} a
-            {data.meta.total > 1 ? "ont" : ""} payé pour le Jeûne des Jeunes.
+            {data?.meta.total ?? 0} résultat
+            {(data?.meta.total ?? 0) > 1 ? "s" : ""} affiché
+            {(data?.meta.total ?? 0) > 1 ? "s" : ""} sur {stats.total} personne
+            {stats.total > 1 ? "s" : ""} payée
+            {stats.total > 1 ? "s" : ""} pour le Jeûne des Jeunes.
           </p>
         )}
 
@@ -268,6 +456,7 @@ limit: 20,
         onCreated={() => {
           setShowRattrapage(false);
           refetch();
+          refetchStats();
         }}
       />
     </main>

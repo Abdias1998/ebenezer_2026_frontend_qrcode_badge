@@ -4,7 +4,9 @@ import type {
   PaginatedAdminRegistrations,
   RattrapagePayload,
   RegistrationFormData,
+  RegistrationListParams,
   RegistrationResponse,
+  RegistrationStats,
 } from "@/types/registration.types";
 
 export const registrationService = {
@@ -24,12 +26,7 @@ export const registrationService = {
     return response.data.data;
   },
 
-  async list(params: {
-    eventId?: string;
-    paid?: boolean;
-    page?: number;
-    limit?: number;
-  } = {}): Promise<PaginatedAdminRegistrations> {
+  async list(params: RegistrationListParams = {}): Promise<PaginatedAdminRegistrations> {
     const response = await apiClient.get<{
       data: PaginatedAdminRegistrations["items"];
       meta: PaginatedAdminRegistrations["meta"];
@@ -39,9 +36,32 @@ export const registrationService = {
         limit: params.limit ?? 20,
         event: params.eventId,
         paid: params.paid === true ? "true" : undefined,
+        tshirtSize: params.tshirtSize || undefined,
+        pickupLocation: params.pickupLocation || undefined,
+        city: params.city || undefined,
+        church: params.church || undefined,
+        paymentNetwork: params.paymentNetwork || undefined,
+        status: params.status || undefined,
+        search: params.search || undefined,
       },
     });
     return { items: response.data.data, meta: response.data.meta };
+  },
+
+  async stats(params: {
+    eventId?: string;
+    paid?: boolean;
+  } = {}): Promise<RegistrationStats> {
+    const response = await apiClient.get<{ data: RegistrationStats }>(
+      "/registrations/stats",
+      {
+        params: {
+          event: params.eventId,
+          paid: params.paid === true ? "true" : undefined,
+        },
+      },
+    );
+    return response.data.data;
   },
 
   async exportListToPdf(params: {
