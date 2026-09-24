@@ -39,6 +39,11 @@ import type { RegistrationResponse } from "@/types/registration.types";
 const POLL_INTERVAL_MS = 15_000;
 const PAYMENT_TIMEOUT_MS = 300_000;
 
+// Permet de finaliser l'inscription même si le payeur quitte la page avant la
+// confirmation du paiement : à son retour, le formulaire détecte la
+// référence en attente et reprend (polling) ou récupère son QR code.
+const PENDING_PAYMENT_KEY = "jdj.pendingPayment";
+
 const PAYMENT_REASON_LABELS: Record<string, string> = {
   LOW_BALANCE_OR_PAYEE_LIMIT_REACHED_OR_NOT_ALLOWED:
     "Solde insuffisant ou limite de paiement de votre compte atteinte.",
@@ -69,6 +74,10 @@ export function JeunesForm({ eventId, eventName }: Props) {
   const [result, setResult] = useState<RegistrationResponse | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const [savedPending, setSavedPending] = useState<{
+    reference: string;
+    formData: JeunesSchemaType;
+  } | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -107,6 +116,78 @@ export function JeunesForm({ eventId, eventName }: Props) {
     };
   }, [stopPolling]);
 
+  // Reprise : si un paiement avait été lancé mais que la page a été fermée
+  // avant la confirmation, on propose au retour de finaliser l'inscription
+  // (ou de récupérer le QR code si le statut est déjà SUCCESSFUL).
+  useEffect(() => {
+    let cancelled = false;
+    let raw: string | null = null;
+    try {
+      raw = localStorage.getItem(PENDING_PAYMENT_KEY);
+    } catch {
+      return;
+    }
+    if (!raw) return;
+
+    let saved: { reference?: string; formData?: JeunesSchemaType };
+    try {
+      saved = JSON.parse(raw);
+    } catch {
+      localStorage.removeItem(PENDING_PAYMENT_KEY);
+      return;
+    }
+    if (!saved?.reference || !saved?.formData) {
+      localStorage.removeItem(PENDING_PAYMENT_KEY);
+      return;
+    }
+
+    feexpayService
+      .getStatus(saved.reference)
+      .then(async (status) => {
+        if (cancelled) return;
+        if (status.status === "SUCCESSFUL") {
+          localStorage.removeItem(PENDING_PAYMENT_KEY);
+          try {
+            const registration = await jeunesService.submit(
+              saved.formData as JeunesSchemaType,
+              eventId,
+              {
+                paymentRef: saved.reference as string,
+                paymentAmount: JDJ_REGISTRATION_FEE,
+              },
+            );
+            if (cancelled) return;
+            setResult(registration);
+            setStep("done");
+          } catch {
+            // Conflit (déjà inscrit) : la reprise idempotente du backend
+            // renvoie le billet existant ; sinon on laisse le formulaire
+            // s'afficher normalement.
+          }
+        } else if (status.status === "PENDING") {
+          setSavedPending({
+            reference: saved.reference as string,
+            formData: saved.formData as JeunesSchemaType,
+          });
+        } else {
+          localStorage.removeItem(PENDING_PAYMENT_KEY);
+        }
+      })
+      .catch(() => {
+        // Statut momentanément indisponible : on propose la reprise.
+        if (!cancelled) {
+          setSavedPending({
+            reference: saved.reference as string,
+            formData: saved.formData as JeunesSchemaType,
+          });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [eventId]);
+
   const pollPaymentStatus = useCallback(
     async (reference: string, formData: JeunesSchemaType) => {
       pollRef.current = setInterval(async () => {
@@ -125,6 +206,7 @@ export function JeunesForm({ eventId, eventName }: Props) {
               eventId,
               { paymentRef: reference, paymentAmount: JDJ_REGISTRATION_FEE },
             );
+            localStorage.removeItem(PENDING_PAYMENT_KEY);
             setResult(registration);
             setStep("done");
           } catch (error: any) {
@@ -182,6 +264,18 @@ export function JeunesForm({ eventId, eventName }: Props) {
           },
         });
 
+        // On mémorise le paiement en cours : si la page est fermée avant la
+        // confirmation, le webhook FeexPay prendra le relais côté serveur et
+        // le formulaire pourra récupérer le QR code au retour du payeur.
+        try {
+          localStorage.setItem(
+            PENDING_PAYMENT_KEY,
+            JSON.stringify({ reference: payment.reference, formData: data }),
+          );
+        } catch {
+          // stockage indisponible : sans gravité
+        }
+
         const isMoov = data.paymentNetwork === "moov";
 
         if (isMoov && payment.status === "SUCCESSFUL") {
@@ -190,6 +284,7 @@ export function JeunesForm({ eventId, eventName }: Props) {
             paymentRef: payment.reference,
             paymentAmount: JDJ_REGISTRATION_FEE,
           });
+          localStorage.removeItem(PENDING_PAYMENT_KEY);
           setResult(registration);
           setStep("done");
         } else if (isMoov && payment.status === "FAILED") {
@@ -373,6 +468,52 @@ export function JeunesForm({ eventId, eventName }: Props) {
         <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3">
           <XCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
           <p className="text-sm text-red-700">{submitError}</p>
+        </div>
+      )}
+
+      {savedPending && !submitError && (
+        <div className="mb-5 flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <div className="flex items-start gap-2.5">
+            <Clock className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-amber-800">
+                Un paiement est encore en attente de confirmation.
+              </p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Vous avez déjà lancé un paiement de{" "}
+                {JDJ_REGISTRATION_FEE.toLocaleString("fr-FR")} FCFA. Vous
+                pouvez le finaliser pour recevoir votre billet.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2.5">
+            <Button
+              type="button"
+              variant="royal"
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                const pending = savedPending;
+                setSavedPending(null);
+                setStep("pending");
+                void pollPaymentStatus(pending.reference, pending.formData);
+              }}
+            >
+              <ArrowRight className="w-4 h-4" />
+              Finaliser mon inscription
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                localStorage.removeItem(PENDING_PAYMENT_KEY);
+                setSavedPending(null);
+              }}
+            >
+              Ignorer
+            </Button>
+          </div>
         </div>
       )}
 
