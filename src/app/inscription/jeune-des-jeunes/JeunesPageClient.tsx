@@ -1,19 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { CalendarDays, Lock, MapPin, Shirt, Send, Users } from "lucide-react";
+import { CalendarDays, MapPin, Shirt, Send, Users } from "lucide-react";
+import { JeunesForm } from "@/features/jeunes/components/JeunesForm";
 import { JDJ_EVENT_NAME } from "@/features/jeunes/constants";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 
 export function JeunesPageClient() {
-  const [showClosed, setShowClosed] = useState(true);
+  const eventId =
+    process.env.NEXT_PUBLIC_JDJ_EVENT_ID ||
+    process.env.NEXT_PUBLIC_DEFAULT_EVENT_ID ||
+    "default";
 
   return (
     <main className="min-h-screen bg-royal-50/50">
@@ -29,9 +24,9 @@ export function JeunesPageClient() {
             {JDJ_EVENT_NAME}
           </h1>
           <p className="mt-4 max-w-xl mx-auto text-sm sm:text-base text-royal-100/90 leading-relaxed">
-            Cinq voix, un même appel : rejoins-nous samedi 26 septembre 2026
-            pour une journée de restauration, d'adoration et d'enseignement
-            prophétique.
+            Cinq voix, un même appel : réserve ta place dès maintenant et
+            rejoins-nous samedi 26 septembre 2026 pour une journée de
+            restauration, d'adoration et d'enseignement prophétique.
           </p>
 
           <div className="mt-7 flex flex-wrap justify-center gap-3 text-xs sm:text-sm">
@@ -55,21 +50,9 @@ export function JeunesPageClient() {
         </div>
       </section>
 
-      {/* Inscriptions fermées */}
+      {/* Form */}
       <section className="max-w-3xl mx-auto px-4 pb-16 pt-16 sm:pt-20">
-        <div className="form-section py-12 text-center">
-          <div className="mx-auto flex items-center justify-center w-16 h-16 rounded-full bg-royal-100 text-royal-600">
-            <Lock className="w-8 h-8" />
-          </div>
-          <h2 className="mt-4 text-xl font-bold text-gray-900">
-            Inscriptions clôturées
-          </h2>
-          <p className="mt-2 text-sm text-gray-600 max-w-md mx-auto leading-relaxed">
-            Les inscriptions et les paiements pour le {JDJ_EVENT_NAME} sont
-            désormais fermés. Merci à toutes celles et ceux qui se sont déjà
-            inscrits !
-          </p>
-        </div>
+        <JeunesForm eventId={eventId} eventName={JDJ_EVENT_NAME} />
 
         <div className="mt-8 flex flex-col items-center gap-3 text-center">
           <p className="text-xs text-gray-500 max-w-sm">
@@ -104,27 +87,6 @@ export function JeunesPageClient() {
           </a>
         </div>
       </footer>
-
-      {/* Modal d'arrivée : inscriptions clôturées */}
-      <Dialog open={showClosed} onOpenChange={setShowClosed}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Lock className="w-5 h-5 text-royal-600" />
-              Inscriptions clôturées
-            </DialogTitle>
-            <DialogDescription>
-              Les inscriptions et les paiements pour le {JDJ_EVENT_NAME} sont
-              désormais fermés. Plus aucune demande ne sera acceptée.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end">
-            <Button variant="royal" onClick={() => setShowClosed(false)}>
-              Compris
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </main>
   );
 }
