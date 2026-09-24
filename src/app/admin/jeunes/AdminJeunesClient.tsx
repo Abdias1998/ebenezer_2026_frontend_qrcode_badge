@@ -385,13 +385,40 @@ export function AdminJeunesClient() {
           </div>
         )}
 
-        {stats && (
+        {statsError && (
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            <span>
+              Impossible de charger les compteurs (lieux, tailles). Assurez-vous
+              que le backend a été redémarré avec les dernières modifications.
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() => refetchStats()}
+            >
+              Réessayer
+            </Button>
+          </div>
+        )}
+
+        {data && (
           <p className="text-sm text-gray-500">
-            {data?.meta.total ?? 0} résultat
-            {(data?.meta.total ?? 0) > 1 ? "s" : ""} affiché
-            {(data?.meta.total ?? 0) > 1 ? "s" : ""} sur {stats.total} personne
-            {stats.total > 1 ? "s" : ""} payée
-            {stats.total > 1 ? "s" : ""} pour le Jeûne des Jeunes.
+            Nombre d'inscrits :{" "}
+            <span className="font-semibold text-gray-700">
+              {stats?.total ?? data.meta.total}
+            </span>{" "}
+            personne
+            {(stats?.total ?? data.meta.total) > 1 ? "s" : ""} ont payé pour
+            le Jeûne des Jeunes.
+            {stats && data.meta.total !== stats.total && (
+              <span className="text-gray-400">
+                {" "}
+                — {data.meta.total} résultat
+                {data.meta.total > 1 ? "s" : ""} correspondant
+                {data.meta.total > 1 ? "s" : ""} aux filtres.
+              </span>
+            )}
           </p>
         )}
 
