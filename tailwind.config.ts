@@ -59,6 +59,20 @@ const config: Config = {
           900: "#4a0e0e",
           950: "#2e0806",
         },
+        // Bleu nuit de l'affiche du Séminaire des Pasteurs.
+        navy: {
+          50: "#eef3ff",
+          100: "#dbe5ff",
+          200: "#bfd0ff",
+          300: "#93b0fb",
+          400: "#6086f5",
+          500: "#3b62ea",
+          600: "#2546d0",
+          700: "#1d37a8",
+          800: "#1a2f84",
+          900: "#142463",
+          950: "#0a1640",
+        },
         gold: {
           50: "#fffbeb",
           100: "#fef3c7",
@@ -79,6 +93,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        serif: ["var(--font-mission-serif)", "Georgia", "serif"],
         display: ["var(--font-cal)", "var(--font-inter)", "system-ui", "sans-serif"],
       },
       keyframes: {
@@ -108,6 +123,7 @@ const config: Config = {
       backgroundImage: {
         "gradient-royal": "linear-gradient(135deg, #4a0e0e 0%, #9e2117 50%, #e8452c 100%)",
         "gradient-gold": "linear-gradient(135deg, #92400e 0%, #d97706 50%, #f59e0b 100%)",
+        "gradient-navy": "linear-gradient(160deg, #050d2e 0%, #0a1f63 45%, #1a3fa8 80%, #5b46c2 100%)",
         "gradient-hero": "linear-gradient(135deg, #2e0806 0%, #6e1712 40%, #c62f1e 100%)",
       },
       boxShadow: {

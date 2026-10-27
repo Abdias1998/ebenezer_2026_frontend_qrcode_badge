@@ -93,5 +93,8 @@ export const COUNTRIES = [
   "Togo", "Tunisie", "Zambie", "Zimbabwe",
   "Algérie", "Angola", "Botswana", "Burundi", "Égypte",
   "France", "Belgique", "Suisse", "Canada", "États-Unis",
+  "Afrique du Sud", "Libye", "Seychelles", "Allemagne", "Espagne",
+  "Italie", "Luxembourg", "Pays-Bas", "Portugal", "Royaume-Uni",
+  "Brésil", "Haïti",
   "Autre",
 ];

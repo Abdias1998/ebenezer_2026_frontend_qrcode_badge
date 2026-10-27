@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { Check, LogOut, MessageSquareHeart, Phone, Trash2, User, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { LoadingState } from "@/components/shared/LoadingState";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { AdminNav } from "@/components/shared/AdminNav";
 import { suggestionService } from "@/services/suggestion.service";
 import { formatDate } from "@/lib/utils";
 import type { Suggestion } from "@/types/suggestion.types";
@@ -58,26 +58,7 @@ export function AdminSuggestionsClient() {
             {user && <p className="text-xs text-gray-500">{user.email}</p>}
           </div>
           <div className="flex items-center gap-2">
-            <nav className="flex gap-1 mr-2">
-              <Link
-                href="/admin/suggestions"
-                className="px-3 py-1.5 text-sm font-medium rounded-lg bg-royal-100 text-royal-700"
-              >
-                Suggestions
-              </Link>
-              <Link
-                href="/admin/recruitments"
-                className="px-3 py-1.5 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-              >
-                Recrutements
-              </Link>
-              <Link
-                href="/admin/jeunes"
-                className="px-3 py-1.5 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-              >
-                Jeûne des Jeunes
-              </Link>
-            </nav>
+            <AdminNav active="/admin/suggestions" />
             <Button variant="outline" size="sm" className="gap-1.5" onClick={logout}>
               <LogOut className="w-3.5 h-3.5" />
               Déconnexion

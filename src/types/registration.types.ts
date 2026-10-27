@@ -57,6 +57,25 @@ export interface PaymentStatus {
   reason?: string;
 }
 
+/** Inscription gratuite (séminaire, camp) : aucun champ de paiement. */
+export interface FreeRegistrationPayload {
+  firstName: string;
+  lastName: string;
+  gender?: Gender;
+  phone: string;
+  whatsapp?: string;
+  email?: string;
+  city?: string;
+  country?: string;
+  church?: string;
+  title?: string;
+  profession?: string;
+  company?: string;
+  dob?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+}
+
 export interface RegistrationResponse {
   id: string;
   registrationNumber: string;
@@ -64,11 +83,18 @@ export interface RegistrationResponse {
     id: string;
     firstName: string;
     lastName: string;
+    gender?: string;
+    dob?: string;
     email: string;
     phone: string;
     city?: string;
     country?: string;
     church?: string;
+    title?: string;
+    profession?: string;
+    company?: string;
+    emergencyContactName?: string;
+    emergencyContactPhone?: string;
     tshirtSize?: string;
     pickupLocation?: string;
     photo?: string;
@@ -82,7 +108,7 @@ export interface RegistrationResponse {
   };
   qrCode: string;
   badgePdf?: string;
-  status: "confirmed" | "pending" | "cancelled";
+  status: "confirmed" | "pending" | "cancelled" | "checked-in";
   createdAt: string;
 }
 
@@ -128,16 +154,24 @@ export interface AdminRegistration {
   paymentNetwork?: string;
   paymentPhone?: string;
   paymentAmount?: number;
+  checkedInAt?: string;
   qrCode: string;
   participant?: {
     _id: string;
     firstName: string;
     lastName: string;
+    gender?: string;
+    dob?: string;
     email?: string;
     phone?: string;
     city?: string;
     country?: string;
     church?: string;
+    title?: string;
+    profession?: string;
+    company?: string;
+    emergencyContactName?: string;
+    emergencyContactPhone?: string;
     tshirtSize?: string;
     pickupLocation?: string;
   };
@@ -167,6 +201,10 @@ export interface RegistrationStats {
   byChurch: { value: string; count: number }[];
   byPaymentNetwork: { value: string; count: number }[];
   byStatus: { value: string; count: number }[];
+  byCountry: { value: string; count: number }[];
+  byGender: { value: string; count: number }[];
+  byTitle: { value: string; count: number }[];
+  byProfession: { value: string; count: number }[];
 }
 
 export interface RegistrationListParams {
@@ -178,9 +216,36 @@ export interface RegistrationListParams {
   pickupLocation?: string;
   city?: string;
   church?: string;
+  country?: string;
+  gender?: string;
+  title?: string;
+  profession?: string;
   paymentNetwork?: string;
   status?: string;
   search?: string;
+}
+
+export interface CheckInResult {
+  alreadyCheckedIn: boolean;
+  checkedInAt: string;
+  registration: {
+    id: string;
+    registrationNumber: string;
+    status: string;
+  };
+  participant: {
+    firstName?: string;
+    lastName?: string;
+    gender?: string;
+    phone?: string;
+    city?: string;
+    country?: string;
+    church?: string;
+    title?: string;
+    profession?: string;
+    company?: string;
+  };
+  event: { id: string; name?: string };
 }
 
 export interface ApiError {

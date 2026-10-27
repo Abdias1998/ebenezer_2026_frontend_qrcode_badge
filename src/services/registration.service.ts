@@ -1,6 +1,7 @@
 import apiClient from "@/lib/axios";
 import type {
   AdminRegistration,
+  FreeRegistrationPayload,
   PaginatedAdminRegistrations,
   RattrapagePayload,
   RegistrationFormData,
@@ -26,6 +27,17 @@ export const registrationService = {
     return response.data.data;
   },
 
+  async submitFree(
+    data: FreeRegistrationPayload,
+    eventId: string,
+  ): Promise<RegistrationResponse> {
+    const response = await apiClient.post<{ data: RegistrationResponse }>(
+      "/registrations/public",
+      { ...data, eventId },
+    );
+    return response.data.data;
+  },
+
   async list(params: RegistrationListParams = {}): Promise<PaginatedAdminRegistrations> {
     const response = await apiClient.get<{
       data: PaginatedAdminRegistrations["items"];
@@ -40,6 +52,10 @@ export const registrationService = {
         pickupLocation: params.pickupLocation || undefined,
         city: params.city || undefined,
         church: params.church || undefined,
+        country: params.country || undefined,
+        gender: params.gender || undefined,
+        title: params.title || undefined,
+        profession: params.profession || undefined,
         paymentNetwork: params.paymentNetwork || undefined,
         status: params.status || undefined,
         search: params.search || undefined,

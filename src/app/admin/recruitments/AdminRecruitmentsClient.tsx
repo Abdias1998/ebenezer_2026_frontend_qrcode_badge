@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
@@ -35,6 +34,7 @@ import {
 import { LoadingState } from "@/components/shared/LoadingState";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { AdminNav } from "@/components/shared/AdminNav";
 import { recruitmentService } from "@/services/recruitment.service";
 import { formatDate } from "@/lib/utils";
 import type { Recruitment, RecruitmentStatus } from "@/types/recruitment.types";
@@ -103,26 +103,7 @@ export function AdminRecruitmentsClient() {
             {user && <p className="text-xs text-gray-500">{user.email}</p>}
           </div>
           <div className="flex items-center gap-2">
-            <nav className="flex gap-1 mr-2">
-              <Link
-                href="/admin/suggestions"
-                className="px-3 py-1.5 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-              >
-                Suggestions
-              </Link>
-              <Link
-                href="/admin/recruitments"
-                className="px-3 py-1.5 text-sm font-medium rounded-lg bg-royal-100 text-royal-700"
-              >
-                Recrutements
-              </Link>
-              <Link
-                href="/admin/jeunes"
-                className="px-3 py-1.5 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-              >
-                Jeûne des Jeunes
-              </Link>
-            </nav>
+            <AdminNav active="/admin/recruitments" />
             <Button variant="outline" size="sm" className="gap-1.5" onClick={logout}>
               <LogOut className="w-3.5 h-3.5" />
               Déconnexion

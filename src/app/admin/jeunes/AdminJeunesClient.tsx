@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
@@ -42,6 +41,8 @@ import {
 import { LoadingState } from "@/components/shared/LoadingState";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { AdminNav } from "@/components/shared/AdminNav";
+import { StatChips } from "@/features/admin/components/StatChips";
 import { registrationService } from "@/services/registration.service";
 import { downloadFile, downloadImage, formatDate } from "@/lib/utils";
 import type {
@@ -76,52 +77,6 @@ const STATUS_CONFIG: Record<
 function formatAmount(amount?: number): string {
   if (amount == null) return "";
   return `${amount.toLocaleString("fr-FR")} FCFA`;
-}
-
-function StatChips({
-  title,
-  icon,
-  items,
-  activeValue,
-  filterKey,
-  onToggle,
-}: {
-  title: string;
-  icon: ReactNode;
-  items: { value: string; count: number }[];
-  activeValue: string;
-  filterKey: keyof RegistrationListParams;
-  onToggle: (key: keyof RegistrationListParams, value: string) => void;
-}) {
-  if (items.length === 0) return null;
-
-  return (
-    <div>
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
-        {icon}
-        {title}
-      </p>
-      <div className="flex flex-wrap gap-2">
-        {items.map((item) => {
-          const active = activeValue === item.value;
-          return (
-            <button
-              key={item.value}
-              type="button"
-              onClick={() => onToggle(filterKey, item.value)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                active
-                  ? "bg-royal-600 text-white border-royal-600"
-                  : "bg-white text-gray-700 border-gray-200 hover:border-royal-300 hover:text-royal-700"
-              }`}
-            >
-              {item.value} · {item.count}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
 }
 
 export function AdminJeunesClient() {
@@ -224,26 +179,7 @@ export function AdminJeunesClient() {
             {user && <p className="text-xs text-gray-500">{user.email}</p>}
           </div>
           <div className="flex items-center gap-2">
-            <nav className="flex gap-1 mr-2">
-              <Link
-                href="/admin/suggestions"
-                className="px-3 py-1.5 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-              >
-                Suggestions
-              </Link>
-              <Link
-                href="/admin/recruitments"
-                className="px-3 py-1.5 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-              >
-                Recrutements
-              </Link>
-              <Link
-                href="/admin/jeunes"
-                className="px-3 py-1.5 text-sm font-medium rounded-lg bg-royal-100 text-royal-700"
-              >
-                Jeûne des Jeunes
-              </Link>
-            </nav>
+            <AdminNav active="/admin/jeunes" />
             <Button
               variant="outline"
               size="sm"

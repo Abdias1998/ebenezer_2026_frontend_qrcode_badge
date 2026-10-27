@@ -20,6 +20,8 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         royal:
           "bg-gradient-to-r from-royal-700 to-royal-600 text-white shadow-sm hover:from-royal-800 hover:to-royal-700 hover:shadow-glow",
+        navy:
+          "bg-gradient-to-r from-navy-900 to-navy-700 text-white shadow-sm hover:from-navy-950 hover:to-navy-800 hover:shadow-md",
         gold:
           "bg-gradient-to-r from-gold-600 to-gold-500 text-white shadow-sm hover:from-gold-700 hover:to-gold-600 hover:shadow-glow-gold",
       },
