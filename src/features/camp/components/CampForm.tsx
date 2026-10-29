@@ -86,16 +86,8 @@ export function CampForm({ eventId }: Props) {
         ]}
         note={
           <>
-            Présente ce QR code à ton arrivée, à chaque séance du camp : il
-            sera scanné pour enregistrer ta présence.
-            {ticket.participant.email && (
-              <>
-                {" "}
-                Une copie est aussi envoyée à{" "}
-                <strong>{ticket.participant.email}</strong> (pense à vérifier
-                tes spams).
-              </>
-            )}
+            Télécharge ce QR code et présente-le à ton arrivée, à chaque
+            séance du camp : il sera scanné pour enregistrer ta présence.
           </>
         }
         onNewRegistration={clear}
@@ -121,8 +113,8 @@ export function CampForm({ eventId }: Props) {
           Inscription au camp
         </h2>
         <p className="mt-1 text-sm text-gray-500">
-          Ton QR code s&apos;affiche dès la validation et t&apos;est envoyé par
-          e-mail si tu en indiques un.
+          Ton QR code s&apos;affiche dès la validation : pense à le
+          télécharger.
         </p>
       </div>
 
@@ -177,7 +169,6 @@ export function CampForm({ eventId }: Props) {
               id="camp-email"
               label="E-mail"
               optional
-              hint="Pour recevoir ton QR code par e-mail."
               error={errors.email?.message}
             >
               <Input

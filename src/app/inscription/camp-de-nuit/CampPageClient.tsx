@@ -66,7 +66,7 @@ const STEPS = [
   {
     icon: <QrCode />,
     title: "Reçois ton QR code",
-    text: "Il s'affiche tout de suite et t'est envoyé par e-mail si tu en donnes un.",
+    text: "Il s'affiche tout de suite : télécharge-le sur ton téléphone.",
   },
   {
     icon: <UserCheck />,
