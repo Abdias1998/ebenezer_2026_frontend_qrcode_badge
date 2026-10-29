@@ -2,7 +2,7 @@ import type { MissionContact } from "@/features/mission/components/MissionLandin
 
 export const CAMP_EVENT_ID = process.env.NEXT_PUBLIC_CAMP_EVENT_ID || "";
 
-export const CAMP_EVENT_NAME = "Camp La Sagesse de Bâtir";
+export const CAMP_EVENT_NAME = "Camp La Sagesse pour Bâtir";
 
 /** Édition en cours : une édition = un événement (et un CAMP_EVENT_ID). */
 export const CAMP_EDITION = "Édition 2026";

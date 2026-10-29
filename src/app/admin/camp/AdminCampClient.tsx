@@ -57,7 +57,7 @@ export function AdminCampClient() {
       icon={<MoonStar className="w-5 h-5 text-royal-600" />}
       audienceLabel="jeunes"
       exportColumns={EXPORT_COLUMNS}
-      exportFileName="camp-sagesse-de-batir"
+      exportFileName="camp-sagesse-pour-batir"
       perSession
       renderProfile={(registration) => <CampProfile registration={registration} />}
       statFilters={[

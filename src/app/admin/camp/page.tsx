@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { AdminCampClient } from "./AdminCampClient";
 
 export const metadata: Metadata = {
-  title: "Camp La Sagesse de Bâtir — Admin EBENEZER",
+  title: "Camp La Sagesse pour Bâtir — Admin EBENEZER",
   robots: { index: false, follow: false },
 };
 
