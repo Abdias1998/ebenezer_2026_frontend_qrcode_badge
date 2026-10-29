@@ -89,8 +89,13 @@ interface Props {
 
 const EXPORT_PAGE_SIZE = 100;
 
-/** Date du jour (AAAA-MM-JJ), au même format que le pointage côté serveur. */
-const todayString = () => new Date().toISOString().slice(0, 10);
+/**
+ * Date de la séance en cours (AAAA-MM-JJ), calculée comme côté serveur :
+ * la journée va de 05h00 à 05h00, heure du Bénin (UTC+1).
+ */
+const SESSION_DAY_SHIFT_MS = 5 * 60 * 60 * 1000;
+const todayString = () =>
+  new Date(Date.now() - SESSION_DAY_SHIFT_MS).toISOString().slice(0, 10);
 
 export function formatSessionDate(date: string): string {
   return new Date(`${date}T12:00:00Z`).toLocaleDateString("fr-FR", {

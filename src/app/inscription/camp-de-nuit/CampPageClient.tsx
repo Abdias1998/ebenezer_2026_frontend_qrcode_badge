@@ -183,7 +183,7 @@ function Hero() {
           <div className="relative grid w-full grid-cols-3 gap-2 text-center">
             {[
               { value: "Ven.", label: "chaque semaine" },
-              { value: "11 h", label: "dans Sa présence" },
+              { value: "3 h", label: "dans Sa présence" },
               { value: "0 F", label: "à payer" },
             ].map((item) => (
               <div
@@ -254,7 +254,7 @@ function NightProgramme() {
         <ol className="relative mt-12 space-y-6 border-l border-white/15 pl-8">
           {CAMP_ACTIVITIES.map((activity, index) => (
             <motion.li
-              key={activity.time}
+              key={activity.title}
               {...fadeUp}
               transition={{ duration: 0.45, delay: index * 0.05 }}
               className="relative"
@@ -263,15 +263,14 @@ function NightProgramme() {
                 <span className="h-2 w-2 rounded-full bg-gold-400" />
               </span>
               <p className="text-sm font-bold tabular-nums text-gold-300">
-                {activity.time}
+                {String(index + 1).padStart(2, "0")}
               </p>
               <p className="mt-0.5 font-serif text-xl font-bold">{activity.title}</p>
-              <p className="mt-1 text-sm text-navy-200">{activity.text}</p>
             </motion.li>
           ))}
         </ol>
         <p className="mt-10 text-center text-xs text-navy-300">
-          Programme indicatif, susceptible d&apos;évoluer.
+          De 23h00 à 02h00 · programme indicatif, susceptible d&apos;évoluer.
         </p>
       </div>
     </section>

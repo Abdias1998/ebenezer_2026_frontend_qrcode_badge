@@ -10,7 +10,7 @@ export const CAMP_EDITION = "Édition 2026";
 export const CAMP_TAGLINE = "Chaque vendredi dans Sa présence";
 
 export const CAMP_DATE_LABEL = "Tous les vendredis";
-export const CAMP_HOURS_LABEL = "De 19h00 à 06h00";
+export const CAMP_HOURS_LABEL = "De 23h00 à 02h00";
 export const CAMP_LOCATION_LABEL = "Centre La Grâce Parle, Jéricho";
 
 export const CAMP_VISION =
@@ -36,19 +36,15 @@ export const CAMP_OBJECTIVES = [
 ] as const;
 
 export const CAMP_ACTIVITIES = [
-  { time: "19h00", title: "Accueil et enregistrement", text: "Scan des QR codes à l'entrée, installation." },
-  { time: "20h00", title: "Louange et adoration", text: "Un grand temps de célébration pour ouvrir la nuit." },
-  { time: "21h30", title: "Enseignement", text: "Un message pour la jeunesse, suivi d'un temps d'échange." },
-  { time: "23h00", title: "Ateliers et témoignages", text: "Groupes de partage, questions-réponses, témoignages." },
-  { time: "00h30", title: "Veillée de prière", text: "Intercession, prière pour les nations et pour chaque jeune." },
-  { time: "04h00", title: "Temps de consécration", text: "Engagements personnels et prière de bénédiction." },
-  { time: "06h00", title: "Clôture", text: "Petit-déjeuner fraternel et départ encadré." },
+  { title: "Prière" },
+  { title: "Exposé" },
+  { title: "Discussion" },
 ] as const;
 
 export const CAMP_PRACTICAL = [
   { title: "À apporter", text: "Une Bible, un carnet, une tenue correcte et chaude, une gourde, une lampe de poche." },
   { title: "Encadrement", text: "Des responsables et des secouristes sont présents toute la nuit." },
-  { title: "Arrivée", text: "Présente ton QR code à l'accueil : il est scanné pour enregistrer ta présence." },
+  { title: "Arrivée", text: "Arrive avant 23h00 et présente ton QR code à l'accueil : il est scanné pour enregistrer ta présence." },
   { title: "Départ", text: "Aucune sortie n'est permise avant la clôture, sauf accord des responsables." },
 ] as const;
 
