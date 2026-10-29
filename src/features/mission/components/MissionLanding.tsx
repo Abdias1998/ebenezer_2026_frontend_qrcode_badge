@@ -6,7 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Download, Phone, Send } from "lucide-react";
 
-/** Briques communes aux pages d'inscription de la Mission au Bénin. */
+/** Briques communes aux pages d'inscription (séminaire, conférence, camp de nuit). */
 
 export const fadeUp = {
   initial: { opacity: 0, y: 24 },

@@ -58,6 +58,8 @@ export const registrationService = {
         profession: params.profession || undefined,
         paymentNetwork: params.paymentNetwork || undefined,
         status: params.status || undefined,
+        presentOn: params.presentOn || undefined,
+        absentOn: params.absentOn || undefined,
         search: params.search || undefined,
       },
     });

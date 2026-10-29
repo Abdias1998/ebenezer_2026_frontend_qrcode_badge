@@ -47,14 +47,6 @@ export type SeminaireSchemaType = z.infer<typeof seminaireRegistrationSchema>;
 export const campRegistrationSchema = z.object({
   lastName: name("nom"),
   firstName: name("prénom"),
-  gender,
-  dob: z
-    .string()
-    .min(1, "Veuillez indiquer votre date de naissance")
-    .refine((val) => {
-      const date = new Date(val);
-      return !Number.isNaN(date.getTime()) && date < new Date();
-    }, "Date de naissance invalide"),
   phone,
   email: z
     .string()
@@ -62,13 +54,20 @@ export const campRegistrationSchema = z.object({
     .email("Adresse email invalide")
     .optional()
     .or(z.literal("")),
-  city: z.string().trim().min(2, "Veuillez indiquer votre ville"),
   church: z.string().trim().optional(),
   emergencyContactName: z
     .string()
     .trim()
-    .min(2, "Veuillez indiquer le nom d'un parent ou tuteur"),
+    .min(2, "Veuillez indiquer le nom de la personne à contacter"),
   emergencyContactPhone: phone,
+  acceptRules: z.literal(true, {
+    errorMap: () => ({ message: "Vous devez accepter le règlement du camp" }),
+  }),
+  dataConsent: z.literal(true, {
+    errorMap: () => ({
+      message: "Votre consentement est nécessaire pour traiter l'inscription",
+    }),
+  }),
 });
 
 export type CampSchemaType = z.infer<typeof campRegistrationSchema>;

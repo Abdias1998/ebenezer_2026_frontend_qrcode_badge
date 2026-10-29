@@ -6,7 +6,7 @@ const ADMIN_LINKS = [
   { href: "/admin/jeunes", label: "Jeûne des Jeunes" },
   { href: "/admin/seminaire", label: "Séminaire" },
   { href: "/admin/conference", label: "Conférence Pro" },
-  { href: "/admin/camp", label: "Camp de nuit" },
+  { href: "/admin/camp", label: "Camp" },
   { href: "/admin/scanner", label: "Scanner" },
 ] as const;
 

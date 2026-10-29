@@ -1,19 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { ArrowRight, XCircle } from "lucide-react";
+import { ArrowRight, ShieldCheck, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { FormField } from "@/components/shared/FormField";
 import { RegistrationTicket } from "@/components/shared/RegistrationTicket";
 import { useSavedTicket } from "@/hooks/useSavedTicket";
@@ -21,6 +15,10 @@ import {
   campRegistrationSchema,
   type CampSchemaType,
 } from "@/lib/validations/free-registration.schema";
+import {
+  CampPrivacyDialog,
+  CampRulesDialog,
+} from "@/features/camp/components/CampDocuments";
 import { registrationService } from "@/services/registration.service";
 import { scrollToFirstError } from "@/lib/utils";
 
@@ -52,9 +50,16 @@ export function CampForm({ eventId }: Props) {
       try {
         const registration = await registrationService.submitFree(
           {
-            ...data,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            phone: data.phone,
+            whatsapp: data.phone,
             email: data.email || undefined,
             church: data.church || undefined,
+            emergencyContactName: data.emergencyContactName,
+            emergencyContactPhone: data.emergencyContactPhone,
+            acceptRules: data.acceptRules,
+            dataConsent: data.dataConsent,
           },
           eventId,
         );
@@ -72,8 +77,6 @@ export function CampForm({ eventId }: Props) {
       <RegistrationTicket
         result={ticket}
         details={[
-          { label: "Ville", value: ticket.participant.city },
-          { label: "Église", value: ticket.participant.church },
           {
             label: "Contact d'urgence",
             value: ticket.participant.emergencyContactName
@@ -81,8 +84,22 @@ export function CampForm({ eventId }: Props) {
               : undefined,
           },
         ]}
-        note="Présente ce QR code à ton arrivée au camp : il sera scanné pour confirmer ta présence."
+        note={
+          <>
+            Présente ce QR code à ton arrivée, à chaque séance du camp : il
+            sera scanné pour enregistrer ta présence.
+            {ticket.participant.email && (
+              <>
+                {" "}
+                Une copie est aussi envoyée à{" "}
+                <strong>{ticket.participant.email}</strong> (pense à vérifier
+                tes spams).
+              </>
+            )}
+          </>
+        }
         onNewRegistration={clear}
+        tone="navy"
       />
     );
   }
@@ -94,15 +111,18 @@ export function CampForm({ eventId }: Props) {
       transition={{ duration: 0.35 }}
       onSubmit={onSubmit}
       noValidate
-      className="mx-auto max-w-xl rounded-[2rem] bg-white p-7 shadow-[0_30px_70px_-34px_rgba(131,0,5,0.45)] ring-1 ring-royal-200/60 sm:p-9"
+      className="mx-auto max-w-xl rounded-[2rem] bg-white p-7 shadow-[0_30px_70px_-34px_rgba(10,22,64,0.55)] ring-1 ring-navy-100 sm:p-9"
     >
       <div className="mb-6">
-        <h2 className="text-2xl font-display font-bold text-gray-900">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-green-700 ring-1 ring-green-200">
+          100 % gratuit · aucun paiement
+        </span>
+        <h2 className="mt-3 text-2xl font-serif font-bold text-navy-950">
           Inscription au camp
         </h2>
         <p className="mt-1 text-sm text-gray-500">
-          Inscription gratuite. Ton QR code s&apos;affiche dès la validation :
-          garde-le, il sera scanné à ton arrivée.
+          Ton QR code s&apos;affiche dès la validation et t&apos;est envoyé par
+          e-mail si tu en indiques un.
         </p>
       </div>
 
@@ -114,131 +134,64 @@ export function CampForm({ eventId }: Props) {
       )}
 
       <div className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <FormField
-            id="camp-lastName"
-            label="Nom"
-            required
-            error={errors.lastName?.message}
-          >
-            <Input
-              id="camp-lastName"
-              {...register("lastName")}
-              placeholder="Ex : Dupont"
-              error={!!errors.lastName}
-              autoComplete="family-name"
-            />
-          </FormField>
-          <FormField
-            id="camp-firstName"
-            label="Prénom(s)"
-            required
-            error={errors.firstName?.message}
-          >
-            <Input
-              id="camp-firstName"
-              {...register("firstName")}
-              placeholder="Ex : Jean-Marc"
-              error={!!errors.firstName}
-              autoComplete="given-name"
-            />
-          </FormField>
-        </div>
+        <FormSection title="Toi">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormField id="camp-lastName" label="Nom" required error={errors.lastName?.message}>
+              <Input
+                id="camp-lastName"
+                {...register("lastName")}
+                placeholder="Ex : Dupont"
+                error={!!errors.lastName}
+                autoComplete="family-name"
+              />
+            </FormField>
+            <FormField id="camp-firstName" label="Prénom(s)" required error={errors.firstName?.message}>
+              <Input
+                id="camp-firstName"
+                {...register("firstName")}
+                placeholder="Ex : Jean-Marc"
+                error={!!errors.firstName}
+                autoComplete="given-name"
+              />
+            </FormField>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <FormField
-            id="camp-gender"
-            label="Sexe"
-            required
-            error={errors.gender?.message}
-          >
-            <Select
-              value={watch("gender")}
-              onValueChange={(v) =>
-                setValue("gender", v as CampSchemaType["gender"], {
-                  shouldValidate: true,
-                })
-              }
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormField
+              id="camp-phone"
+              label="Téléphone (WhatsApp)"
+              required
+              error={errors.phone?.message}
             >
-              <SelectTrigger id="camp-gender" error={!!errors.gender}>
-                <SelectValue placeholder="Sélectionnez" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="male">Garçon</SelectItem>
-                <SelectItem value="female">Fille</SelectItem>
-              </SelectContent>
-            </Select>
-          </FormField>
-          <FormField
-            id="camp-dob"
-            label="Date de naissance"
-            required
-            error={errors.dob?.message}
-          >
-            <Input
-              id="camp-dob"
-              type="date"
-              {...register("dob")}
-              error={!!errors.dob}
-              autoComplete="bday"
-            />
-          </FormField>
-        </div>
+              <Input
+                id="camp-phone"
+                type="tel"
+                inputMode="tel"
+                {...register("phone")}
+                placeholder="+229 01 97 00 00 00"
+                error={!!errors.phone}
+                autoComplete="tel"
+              />
+            </FormField>
+            <FormField
+              id="camp-email"
+              label="E-mail"
+              optional
+              hint="Pour recevoir ton QR code par e-mail."
+              error={errors.email?.message}
+            >
+              <Input
+                id="camp-email"
+                type="email"
+                {...register("email")}
+                placeholder="toi@exemple.com"
+                error={!!errors.email}
+                autoComplete="email"
+              />
+            </FormField>
+          </div>
 
-        <FormField
-          id="camp-phone"
-          label="Numéro (WhatsApp de préférence)"
-          required
-          error={errors.phone?.message}
-        >
-          <Input
-            id="camp-phone"
-            type="tel"
-            inputMode="tel"
-            {...register("phone")}
-            placeholder="+229 01 97 00 00 00"
-            error={!!errors.phone}
-            autoComplete="tel"
-          />
-        </FormField>
-
-        <FormField
-          id="camp-email"
-          label="Email"
-          optional
-          error={errors.email?.message}
-        >
-          <Input
-            id="camp-email"
-            type="email"
-            {...register("email")}
-            placeholder="toi@exemple.com"
-            error={!!errors.email}
-            autoComplete="email"
-          />
-        </FormField>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <FormField
-            id="camp-city"
-            label="Ville / quartier"
-            required
-            error={errors.city?.message}
-          >
-            <Input
-              id="camp-city"
-              {...register("city")}
-              placeholder="Ex : Cotonou, Akpakpa"
-              error={!!errors.city}
-              autoComplete="address-level2"
-            />
-          </FormField>
-          <FormField
-            id="camp-church"
-            label="Église"
-            optional
-            error={errors.church?.message}
-          >
+          <FormField id="camp-church" label="Église" optional error={errors.church?.message}>
             <Input
               id="camp-church"
               {...register("church")}
@@ -246,12 +199,9 @@ export function CampForm({ eventId }: Props) {
               error={!!errors.church}
             />
           </FormField>
-        </div>
+        </FormSection>
 
-        <div className="pt-3 mt-1 border-t border-gray-100">
-          <p className="text-xs text-gray-400 uppercase tracking-widest font-medium mb-3">
-            Parent / personne à prévenir
-          </p>
+        <FormSection title="Personne à contacter en cas d'urgence">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
               id="camp-emergencyName"
@@ -282,19 +232,131 @@ export function CampForm({ eventId }: Props) {
               />
             </FormField>
           </div>
-        </div>
+        </FormSection>
+
+        <FormSection title="Engagements">
+          <ConsentCheckbox
+            id="camp-acceptRules"
+            field="acceptRules"
+            checked={!!watch("acceptRules")}
+            onChange={(v) =>
+              setValue("acceptRules", v as true, { shouldValidate: true })
+            }
+            error={errors.acceptRules?.message}
+          >
+            J&apos;ai lu et j&apos;accepte le{" "}
+            <CampRulesDialog
+              trigger={
+                <button type="button" className="font-semibold text-navy-700 underline underline-offset-2">
+                  règlement du camp
+                </button>
+              }
+            />
+            .
+          </ConsentCheckbox>
+          <ConsentCheckbox
+            id="camp-dataConsent"
+            field="dataConsent"
+            checked={!!watch("dataConsent")}
+            onChange={(v) =>
+              setValue("dataConsent", v as true, { shouldValidate: true })
+            }
+            error={errors.dataConsent?.message}
+          >
+            J&apos;accepte que mes informations soient collectées et traitées
+            pour l&apos;organisation du camp (
+            <CampPrivacyDialog
+              trigger={
+                <button type="button" className="font-semibold text-navy-700 underline underline-offset-2">
+                  en savoir plus
+                </button>
+              }
+            />
+            ).
+          </ConsentCheckbox>
+        </FormSection>
       </div>
 
       <Button
         type="submit"
-        variant="royal"
+        variant="navy"
         size="lg"
         loading={isSubmitting}
         className="mt-7 w-full gap-2 rounded-full"
       >
-        Je m&apos;inscris et je reçois mon QR code
+        Je m&apos;inscris gratuitement
         <ArrowRight className="w-4 h-4" />
       </Button>
+      <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-gray-500">
+        <ShieldCheck className="h-3.5 w-3.5" />
+        Tes données restent confidentielles et réservées aux responsables du camp.
+      </p>
     </motion.form>
+  );
+}
+
+function FormSection({
+  title,
+  subtitle,
+  highlight,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  highlight?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <fieldset
+      className={`space-y-4 border-t pt-4 first:border-t-0 first:pt-0 ${
+        highlight
+          ? "rounded-2xl border border-gold-200 bg-gold-50/60 p-4 first:pt-4"
+          : "border-gray-100"
+      }`}
+    >
+      <legend className="sr-only">{title}</legend>
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+          {title}
+        </p>
+        {subtitle && <p className="mt-1 text-xs text-gold-800">{subtitle}</p>}
+      </div>
+      {children}
+    </fieldset>
+  );
+}
+
+function ConsentCheckbox({
+  id,
+  field,
+  checked,
+  onChange,
+  error,
+  children,
+}: {
+  id: string;
+  /** Nom du champ : sert d'ancre pour défiler jusqu'à l'erreur. */
+  field: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+  error?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div id={field}>
+      <div className="flex items-start gap-3">
+        <Checkbox
+          id={id}
+          checked={checked}
+          onCheckedChange={(v) => onChange(v === true)}
+          className="mt-0.5 border-navy-700 data-[state=checked]:bg-navy-700"
+          aria-invalid={!!error}
+        />
+        <label htmlFor={id} className="text-sm leading-relaxed text-gray-700">
+          {children}
+        </label>
+      </div>
+      {error && <p className="ml-8 mt-1 text-xs text-red-500">{error}</p>}
+    </div>
   );
 }

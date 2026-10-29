@@ -74,6 +74,13 @@ export interface FreeRegistrationPayload {
   dob?: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
+  address?: string;
+  guardianName?: string;
+  guardianRelation?: string;
+  guardianPhone?: string;
+  acceptRules?: boolean;
+  parentalConsent?: boolean;
+  dataConsent?: boolean;
 }
 
 export interface RegistrationResponse {
@@ -95,6 +102,10 @@ export interface RegistrationResponse {
     company?: string;
     emergencyContactName?: string;
     emergencyContactPhone?: string;
+    address?: string;
+    guardianName?: string;
+    guardianRelation?: string;
+    guardianPhone?: string;
     tshirtSize?: string;
     pickupLocation?: string;
     photo?: string;
@@ -172,14 +183,23 @@ export interface AdminRegistration {
     company?: string;
     emergencyContactName?: string;
     emergencyContactPhone?: string;
+    address?: string;
+    guardianName?: string;
+    guardianRelation?: string;
+    guardianPhone?: string;
     tshirtSize?: string;
     pickupLocation?: string;
+    rulesAcceptedAt?: string;
+    parentalConsentAt?: string;
+    dataConsentAt?: string;
   };
   event?: {
     _id: string;
     name?: string;
     registrationPrefix?: string;
   };
+  /** Dates (AAAA-MM-JJ) des séances où l'inscrit a été pointé. */
+  attendanceDates?: string[];
   createdAt: string;
 }
 
@@ -205,6 +225,8 @@ export interface RegistrationStats {
   byGender: { value: string; count: number }[];
   byTitle: { value: string; count: number }[];
   byProfession: { value: string; count: number }[];
+  /** Nombre de présents par séance (date AAAA-MM-JJ). */
+  bySession?: { value: string; count: number }[];
 }
 
 export interface RegistrationListParams {
@@ -222,6 +244,10 @@ export interface RegistrationListParams {
   profession?: string;
   paymentNetwork?: string;
   status?: string;
+  /** Séance (AAAA-MM-JJ) : inscrits pointés ce jour-là. */
+  presentOn?: string;
+  /** Séance (AAAA-MM-JJ) : inscrits non pointés ce jour-là. */
+  absentOn?: string;
   search?: string;
 }
 

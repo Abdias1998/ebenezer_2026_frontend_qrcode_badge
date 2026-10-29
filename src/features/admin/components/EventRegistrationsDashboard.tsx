@@ -5,8 +5,11 @@ import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
+  CalendarDays,
   CheckCircle2,
   Download,
+  FileSpreadsheet,
+  IdCard,
   LogOut,
   Mail,
   Phone,
@@ -37,6 +40,7 @@ import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { registrationService } from "@/services/registration.service";
 import { attendanceService } from "@/services/attendance.service";
 import { downloadImage, formatDate } from "@/lib/utils";
+import { downloadCsv } from "@/lib/csv";
 import type {
   AdminRegistration,
   RegistrationListParams,
@@ -55,6 +59,11 @@ export interface StatFilterConfig {
   formatLabel?: (value: string) => string;
 }
 
+export interface ExportColumn {
+  header: string;
+  value: (registration: AdminRegistration) => string | number | undefined | null;
+}
+
 interface Props {
   eventId: string;
   envVarName: string;
@@ -65,6 +74,30 @@ interface Props {
   audienceLabel: string;
   statFilters: StatFilterConfig[];
   renderDetails: (registration: AdminRegistration) => ReactNode;
+  /** Colonnes de l'export Excel (CSV). Sans cette option, pas d'export. */
+  exportColumns?: ExportColumn[];
+  /** Préfixe du fichier exporté, ex. « camp-de-nuit ». */
+  exportFileName?: string;
+  /** Fiche complète d'un participant, affichée dans une fenêtre. */
+  renderProfile?: (registration: AdminRegistration) => ReactNode;
+  /**
+   * Événement en plusieurs séances (un pointage par jour) : présents et
+   * absents sont comptés pour la séance choisie (par défaut, aujourd'hui).
+   */
+  perSession?: boolean;
+}
+
+const EXPORT_PAGE_SIZE = 100;
+
+/** Date du jour (AAAA-MM-JJ), au même format que le pointage côté serveur. */
+const todayString = () => new Date().toISOString().slice(0, 10);
+
+export function formatSessionDate(date: string): string {
+  return new Date(`${date}T12:00:00Z`).toLocaleDateString("fr-FR", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+  });
 }
 
 function formatTime(value: string): string {
@@ -87,6 +120,10 @@ export function EventRegistrationsDashboard({
   audienceLabel,
   statFilters,
   renderDetails,
+  exportColumns,
+  exportFileName = "inscrits",
+  renderProfile,
+  perSession = false,
 }: Props) {
   const { user, isChecking, logout } = useAdminAuth();
   const queryClient = useQueryClient();
@@ -94,15 +131,28 @@ export function EventRegistrationsDashboard({
   const [selected, setSelected] = useState<AdminRegistration | null>(null);
   const [filters, setFilters] = useState<RegistrationListParams>({});
   const [presence, setPresence] = useState<PresenceFilter>("");
+  const [profile, setProfile] = useState<AdminRegistration | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [session, setSession] = useState("");
 
   const hasEventId = eventId.length > 0;
   const enabled = !isChecking && !!user && hasEventId;
+  const today = todayString();
+  /** Séance de référence pour les présences (mode multi-séances). */
+  const sessionDate = session || today;
 
-  const appliedFilters: RegistrationListParams = {
-    ...filters,
-    eventId,
-    status: presence || undefined,
-  };
+  const appliedFilters: RegistrationListParams = perSession
+    ? {
+        ...filters,
+        eventId,
+        presentOn: presence === "checked-in" ? sessionDate : undefined,
+        absentOn: presence === "confirmed" ? sessionDate : undefined,
+      }
+    : {
+        ...filters,
+        eventId,
+        status: presence || undefined,
+      };
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["event-registrations", eventId, page, appliedFilters],
@@ -137,8 +187,9 @@ export function EventRegistrationsDashboard({
   });
 
   const total = stats?.total ?? 0;
-  const present =
-    stats?.byStatus.find((s) => s.value === "checked-in")?.count ?? 0;
+  const present = perSession
+    ? (stats?.bySession?.find((s) => s.value === sessionDate)?.count ?? 0)
+    : (stats?.byStatus.find((s) => s.value === "checked-in")?.count ?? 0);
   const absent = Math.max(total - present, 0);
 
   const setFilter = (key: keyof RegistrationListParams, value: string) => {
@@ -155,8 +206,42 @@ export function EventRegistrationsDashboard({
     setPage(1);
   };
 
+  const toggleSession = (value: string) => {
+    setSession((current) => (current === value ? "" : value));
+    setPage(1);
+  };
+
   const hasActiveFilters =
-    !!presence || Object.values(filters).some((v) => !!v);
+    !!presence || !!session || Object.values(filters).some((v) => !!v);
+
+  /** Exporte toute la liste (avec les filtres en cours), page par page. */
+  const exportList = async () => {
+    if (!exportColumns) return;
+    setExporting(true);
+    try {
+      const items: AdminRegistration[] = [];
+      for (let p = 1; ; p++) {
+        const result = await registrationService.list({
+          ...appliedFilters,
+          page: p,
+          limit: EXPORT_PAGE_SIZE,
+        });
+        items.push(...result.items);
+        if (p >= result.meta.pages || result.items.length === 0) break;
+      }
+      const date = new Date().toISOString().slice(0, 10);
+      downloadCsv(
+        `${exportFileName}-${date}.csv`,
+        exportColumns.map((c) => c.header),
+        items.map((r) => exportColumns.map((c) => c.value(r))),
+      );
+      toast.success(`${items.length} ligne(s) exportée(s).`);
+    } catch (error: any) {
+      toast.error(error?.message || "Export impossible.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   if (isChecking) {
     return (
@@ -199,6 +284,17 @@ export function EventRegistrationsDashboard({
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-3">
+        {hasEventId && perSession && (
+          <p className="text-sm text-gray-600 flex items-center gap-1.5">
+            <CalendarDays className="w-4 h-4 text-royal-600" />
+            Présences de la séance du{" "}
+            <strong className="text-gray-900">
+              {formatSessionDate(sessionDate)}
+            </strong>
+            {sessionDate === today && " (aujourd'hui)"}
+          </p>
+        )}
+
         {!hasEventId && (
           <div className="form-section text-center py-6 text-sm text-amber-700 border border-amber-200 bg-amber-50">
             Configuration requise : renseignez{" "}
@@ -258,6 +354,17 @@ export function EventRegistrationsDashboard({
 
               {stats && (
                 <div className="space-y-3">
+                  {perSession && (
+                    <StatChips
+                      title="Séances (présents)"
+                      icon={<CalendarDays className="w-3.5 h-3.5" />}
+                      items={stats.bySession ?? []}
+                      activeValue={session}
+                      filterKey="presentOn"
+                      onToggle={(_, value) => toggleSession(value)}
+                      formatLabel={formatSessionDate}
+                    />
+                  )}
                   {statFilters.map((cfg) => (
                     <StatChips
                       key={cfg.filterKey}
@@ -273,21 +380,36 @@ export function EventRegistrationsDashboard({
                 </div>
               )}
 
-              {hasActiveFilters && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5 text-gray-600"
-                  onClick={() => {
-                    setFilters({});
-                    setPresence("");
-                    setPage(1);
-                  }}
-                >
-                  <X className="w-3.5 h-3.5" />
-                  Réinitialiser les filtres
-                </Button>
-              )}
+              <div className="flex flex-wrap gap-2">
+                {exportColumns && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    loading={exporting}
+                    onClick={exportList}
+                  >
+                    <FileSpreadsheet className="w-3.5 h-3.5" />
+                    Exporter {hasActiveFilters ? "la sélection" : "la liste"} (Excel)
+                  </Button>
+                )}
+                {hasActiveFilters && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-gray-600"
+                    onClick={() => {
+                      setFilters({});
+                      setPresence("");
+                      setSession("");
+                      setPage(1);
+                    }}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    Réinitialiser les filtres
+                  </Button>
+                )}
+              </div>
             </div>
           </>
         )}
@@ -322,6 +444,11 @@ export function EventRegistrationsDashboard({
             registration={registration}
             details={renderDetails(registration)}
             onShowQr={() => setSelected(registration)}
+            onShowProfile={
+              renderProfile ? () => setProfile(registration) : undefined
+            }
+            sessionDate={perSession ? sessionDate : undefined}
+            canCheckIn={!perSession || sessionDate === today}
             onCheckIn={() => checkInMutation.mutate(registration.id)}
             checkingIn={
               checkInMutation.isPending &&
@@ -356,6 +483,13 @@ export function EventRegistrationsDashboard({
       </div>
 
       <QrDialog registration={selected} onClose={() => setSelected(null)} />
+      {renderProfile && (
+        <ProfileDialog
+          registration={profile}
+          onClose={() => setProfile(null)}
+          render={renderProfile}
+        />
+      )}
     </main>
   );
 }
@@ -404,19 +538,30 @@ function RegistrationRow({
   registration,
   details,
   onShowQr,
+  onShowProfile,
+  sessionDate,
+  canCheckIn,
   onCheckIn,
   checkingIn,
 }: {
   registration: AdminRegistration;
   details: ReactNode;
   onShowQr: () => void;
+  onShowProfile?: () => void;
+  /** Mode multi-séances : la présence affichée est celle de cette date. */
+  sessionDate?: string;
+  /** Le pointage manuel n'enregistre que la séance du jour. */
+  canCheckIn: boolean;
   onCheckIn: () => void;
   checkingIn: boolean;
 }) {
   const fullName = `${registration.participant?.firstName ?? ""} ${
     registration.participant?.lastName ?? ""
   }`.trim();
-  const isPresent = registration.status === "checked-in";
+  const sessionsAttended = registration.attendanceDates ?? [];
+  const isPresent = sessionDate
+    ? sessionsAttended.includes(sessionDate)
+    : registration.status === "checked-in";
 
   return (
     <motion.div
@@ -434,7 +579,8 @@ function RegistrationRow({
               <Badge variant="success" className="shrink-0 gap-1">
                 <CheckCircle2 className="w-3 h-3" />
                 Présent
-                {registration.checkedInAt &&
+                {!sessionDate &&
+                  registration.checkedInAt &&
                   ` · ${formatTime(registration.checkedInAt)}`}
               </Badge>
             ) : registration.status === "cancelled" ? (
@@ -443,7 +589,14 @@ function RegistrationRow({
               </Badge>
             ) : (
               <Badge variant="warning" className="shrink-0">
-                Pas encore arrivé
+                {sessionDate ? "Absent à cette séance" : "Pas encore arrivé"}
+              </Badge>
+            )}
+            {sessionDate && sessionsAttended.length > 0 && (
+              <Badge variant="outline" className="shrink-0 gap-1">
+                <CalendarDays className="w-3 h-3" />
+                {sessionsAttended.length} séance
+                {sessionsAttended.length > 1 ? "s" : ""}
               </Badge>
             )}
           </div>
@@ -480,7 +633,18 @@ function RegistrationRow({
             <p className="text-xs text-gray-400">
               Inscrit le {formatDate(registration.createdAt)}
             </p>
-            {!isPresent && registration.status !== "cancelled" && (
+            {onShowProfile && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1.5 text-xs"
+                onClick={onShowProfile}
+              >
+                <IdCard className="w-3.5 h-3.5" />
+                Voir la fiche
+              </Button>
+            )}
+            {!isPresent && canCheckIn && registration.status !== "cancelled" && (
               <Button
                 variant="outline"
                 size="sm"
@@ -566,6 +730,39 @@ function QrDialog({
             Télécharger le QR
           </Button>
         </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ProfileDialog({
+  registration,
+  onClose,
+  render,
+}: {
+  registration: AdminRegistration | null;
+  onClose: () => void;
+  render: (registration: AdminRegistration) => ReactNode;
+}) {
+  if (!registration) return null;
+
+  const fullName = `${registration.participant?.firstName ?? ""} ${
+    registration.participant?.lastName ?? ""
+  }`.trim();
+
+  return (
+    <Dialog open={!!registration} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <IdCard className="w-5 h-5 text-royal-600" />
+            {fullName || "Participant"}
+          </DialogTitle>
+          <DialogDescription className="font-mono">
+            {registration.registrationNumber}
+          </DialogDescription>
+        </DialogHeader>
+        {render(registration)}
       </DialogContent>
     </Dialog>
   );
