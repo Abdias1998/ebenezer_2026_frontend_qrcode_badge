@@ -7,16 +7,16 @@ import {
   Briefcase,
   Building2,
   CalendarDays,
+  CheckCircle2,
   Download,
+  ExternalLink,
   Lightbulb,
-  Lock,
   MapPin,
-  QrCode,
   Ticket,
   TicketCheck,
   UserCheck,
 } from "lucide-react";
-import { ConferenceForm } from "@/features/conference/components/ConferenceForm";
+import { GoogleFormCard } from "@/features/mission/components/GoogleFormCard";
 import { missionSerif } from "@/features/mission/fonts";
 import {
   ContactsCard,
@@ -33,8 +33,8 @@ import {
   CONFERENCE_CITY,
   CONFERENCE_CONTACTS,
   CONFERENCE_DATE_LABEL,
-  CONFERENCE_EVENT_ID,
   CONFERENCE_FULL_TITLE,
+  CONFERENCE_GOOGLE_FORM_URL,
   CONFERENCE_GUEST,
   CONFERENCE_INVITATION_URL,
   CONFERENCE_LOCATION_LABEL,
@@ -72,19 +72,19 @@ const AUDIENCES = [
 
 const STEPS = [
   {
-    icon: <Ticket />,
-    title: "Remplissez le formulaire",
+    icon: <ExternalLink />,
+    title: "Ouvrez le formulaire Google",
+    text: "Un clic suffit : le formulaire s'ouvre dans un nouvel onglet.",
+  },
+  {
+    icon: <CheckCircle2 />,
+    title: "Remplissez et envoyez",
     text: "Deux minutes suffisent. L'entrée est libre et gratuite.",
   },
   {
-    icon: <QrCode />,
-    title: "Recevez votre QR code",
-    text: "Il s'affiche immédiatement : téléchargez-le ou faites une capture d'écran.",
-  },
-  {
     icon: <UserCheck />,
-    title: "Présentez-le à l'entrée",
-    text: "Votre QR code est scanné à l'accueil de la salle le 21 novembre.",
+    title: "Présentez-vous à l'entrée",
+    text: "Votre inscription est confirmée à l'accueil de la salle le 21 novembre.",
   },
 ];
 
@@ -159,7 +159,11 @@ function Hero() {
 
           <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
             <a
-              href="#inscription"
+              href={CONFERENCE_GOOGLE_FORM_URL || "#inscription"}
+              target={CONFERENCE_GOOGLE_FORM_URL ? "_blank" : undefined}
+              rel={
+                CONFERENCE_GOOGLE_FORM_URL ? "noopener noreferrer" : undefined
+              }
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-gold-400 to-gold-500 px-7 py-3.5 text-sm font-bold text-navy-950 shadow-[0_12px_30px_-10px_rgba(245,158,11,0.7)] transition-transform hover:-translate-y-0.5 sm:w-auto"
             >
               <Ticket className="h-4 w-4" />
@@ -372,11 +376,13 @@ function Registration() {
           </div>
 
           <div className="order-1 lg:order-2">
-            <ConferenceForm eventId={CONFERENCE_EVENT_ID} />
-            <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-gray-500">
-              <Lock className="h-3 w-3" />
-              Vos informations servent uniquement à l&apos;organisation de la conférence.
-            </p>
+            <GoogleFormCard
+              url={CONFERENCE_GOOGLE_FORM_URL}
+              title="Inscription à la conférence"
+              description="L'inscription se fait directement via notre formulaire Google. Cliquez sur le bouton ci-dessous pour ouvrir le formulaire et réserver votre place."
+              ctaLabel="Ouvrir le formulaire d'inscription"
+              note="Vos informations servent uniquement à l'organisation de la conférence."
+            />
           </div>
         </div>
       </div>

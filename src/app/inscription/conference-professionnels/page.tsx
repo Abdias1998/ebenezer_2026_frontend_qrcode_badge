@@ -4,7 +4,7 @@ import { ConferencePageClient } from "./ConferencePageClient";
 const TITLE =
   "Conférence des Professionnels et Hommes & Femmes d'Affaires — Inscription";
 const DESCRIPTION =
-  "Samedi 21 novembre 2026 à 09h00, salle des fêtes Le Majestic, Cadjehoun (Cotonou), avec le Pr Musoke Paddy Blessed. Thème : Les 7 étapes pour transformer votre rêve en fortune. Entrée libre et gratuite, QR code d'accès immédiat.";
+  "Samedi 21 novembre 2026 à 09h00, salle des fêtes Le Majestic, Cadjehoun (Cotonou), avec le Pr Musoke Paddy Blessed. Thème : Les 7 étapes pour transformer votre rêve en fortune. Entrée libre et gratuite, inscription via notre formulaire en ligne.";
 
 export const metadata: Metadata = {
   title: TITLE,

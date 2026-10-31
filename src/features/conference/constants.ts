@@ -3,6 +3,9 @@ import type { MissionContact } from "@/features/mission/components/MissionLandin
 export const CONFERENCE_EVENT_ID =
   process.env.NEXT_PUBLIC_CONFERENCE_EVENT_ID || "";
 
+export const CONFERENCE_GOOGLE_FORM_URL =
+  process.env.NEXT_PUBLIC_CONFERENCE_GOOGLE_FORM_URL || "";
+
 export const CONFERENCE_EVENT_NAME = "Conférence des Professionnels";
 
 export const CONFERENCE_FULL_TITLE =

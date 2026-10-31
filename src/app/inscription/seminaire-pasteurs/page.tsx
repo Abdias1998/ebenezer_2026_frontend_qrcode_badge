@@ -4,7 +4,7 @@ import { SeminairePageClient } from "./SeminairePageClient";
 const TITLE =
   "Séminaire des Pasteurs — Marcher dans les réalités du Royaume";
 const DESCRIPTION =
-  "Mission au Bénin, du 17 au 20 novembre 2026 au Centre La Grâce Parle, Jéricho, avec le Prophète Samuel Dalum. Inscription gratuite des pasteurs et serviteurs de Dieu, QR code d'accès immédiat.";
+  "Mission au Bénin, du 17 au 20 novembre 2026 au Centre La Grâce Parle, Jéricho, avec le Prophète Samuel Dalum. Inscription gratuite des pasteurs et serviteurs de Dieu via notre formulaire en ligne.";
 
 export const metadata: Metadata = {
   title: TITLE,

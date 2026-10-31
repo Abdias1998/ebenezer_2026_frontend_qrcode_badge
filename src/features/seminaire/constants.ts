@@ -1,6 +1,9 @@
 export const SEMINAIRE_EVENT_ID =
   process.env.NEXT_PUBLIC_SEMINAIRE_EVENT_ID || "";
 
+export const SEMINAIRE_GOOGLE_FORM_URL =
+  process.env.NEXT_PUBLIC_SEMINAIRE_GOOGLE_FORM_URL || "";
+
 export const SEMINAIRE_EVENT_NAME = "Séminaire des Pasteurs";
 
 export const SEMINAIRE_MISSION = "Mission au Bénin";
